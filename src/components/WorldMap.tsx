@@ -59,8 +59,8 @@ const WorldMap = () => {
 
   // Convert lat/lng to SVG coordinates (simplified projection)
   const projectToSVG = (lat: number, lng: number) => {
-    const x = ((lng + 180) / 360) * 800;
-    const y = ((90 - lat) / 180) * 400;
+    const x = ((lng + 180) / 360) * 1000;
+    const y = ((90 - lat) / 180) * 500;
     return { x, y };
   };
 
@@ -86,72 +86,112 @@ const WorldMap = () => {
         </Badge>
       </div>
 
-      <div className="relative w-full h-full min-h-[400px] bg-surface rounded-lg overflow-hidden">
+      <div className="relative w-full h-full min-h-[400px] bg-surface/50 rounded-lg overflow-hidden">
         {/* Radar Sweep Overlay */}
         <RadarSweep />
         
-        {/* Simplified world map SVG */}
+        {/* World map SVG */}
         <svg
-          viewBox="0 0 800 400"
+          viewBox="0 0 1000 500"
           className="w-full h-full"
-          style={{ filter: 'brightness(0.6)' }}
         >
-          {/* Simple world map outline */}
-          <rect width="800" height="400" fill="hsl(var(--surface))" />
+          {/* Ocean background */}
+          <rect width="1000" height="500" fill="hsl(220 15% 10%)" />
           
-          {/* Continents as simple shapes */}
-          <path
-            d="M150 100 L300 80 L350 120 L300 180 L200 200 L120 150 Z"
-            fill="hsl(var(--surface-elevated))"
-            stroke="hsl(var(--border))"
-            strokeWidth="1"
-          />
-          <path
-            d="M400 90 L600 70 L650 100 L600 160 L500 180 L420 140 Z"
-            fill="hsl(var(--surface-elevated))"
-            stroke="hsl(var(--border))"
-            strokeWidth="1"
-          />
-          <path
-            d="M100 220 L280 200 L320 250 L280 320 L150 340 L80 280 Z"
-            fill="hsl(var(--surface-elevated))"
-            stroke="hsl(var(--border))"
-            strokeWidth="1"
-          />
-          <path
-            d="M500 200 L700 180 L750 220 L700 280 L600 300 L520 260 Z"
-            fill="hsl(var(--surface-elevated))"
-            stroke="hsl(var(--border))"
-            strokeWidth="1"
-          />
-        </svg>
+          {/* Grid lines for reference */}
+          <g stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.3">
+            {[0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000].map(x => (
+              <line key={`v${x}`} x1={x} y1="0" x2={x} y2="500" />
+            ))}
+            {[0, 100, 200, 300, 400, 500].map(y => (
+              <line key={`h${y}`} x1="0" y1={y} x2="1000" y2={y} />
+            ))}
+          </g>
 
-        {/* Emergency markers */}
-        {emergencies.map((emergency) => {
-          const { x, y } = projectToSVG(emergency.lat, emergency.lng);
-          return (
-            <div
-              key={emergency.id}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-              style={{ left: `${(x / 800) * 100}%`, top: `${(y / 400) * 100}%` }}
-              onClick={() => setSelectedEmergency(emergency)}
-            >
-              <div
-                className="w-4 h-4 rounded-full animate-pulse-glow"
-                style={{
-                  backgroundColor: getSeverityColor(emergency.severity),
-                  boxShadow: `0 0 20px ${getSeverityColor(emergency.severity)}`,
-                }}
-              />
-              <div
-                className="absolute top-0 left-0 w-4 h-4 rounded-full animate-emergency-pulse"
-                style={{
-                  backgroundColor: getSeverityColor(emergency.severity),
-                }}
-              />
-            </div>
-          );
-        })}
+          {/* Simplified world continents - more recognizable shapes */}
+          <g fill="hsl(220 15% 18%)" stroke="hsl(var(--secondary) / 0.5)" strokeWidth="1">
+            {/* North America */}
+            <path d="M 150 150 Q 200 120 250 140 L 280 160 L 290 180 L 280 200 L 260 220 L 240 240 L 220 250 L 200 240 L 180 220 L 160 200 L 150 180 Z" />
+            
+            {/* South America */}
+            <path d="M 220 260 L 240 280 L 250 320 L 240 360 L 220 400 L 200 420 L 180 400 L 170 360 L 180 320 L 190 280 L 210 260 Z" />
+            
+            {/* Europe */}
+            <path d="M 480 140 L 520 130 L 540 140 L 530 160 L 510 170 L 490 160 L 480 150 Z" />
+            
+            {/* Africa */}
+            <path d="M 470 200 L 510 190 L 530 210 L 540 250 L 530 300 L 510 340 L 490 360 L 470 340 L 460 300 L 460 250 L 470 210 Z" />
+            
+            {/* Asia */}
+            <path d="M 550 120 L 650 110 L 750 130 L 800 150 L 820 180 L 800 200 L 750 190 L 700 180 L 650 170 L 600 160 L 550 150 Z" />
+            
+            {/* Australia */}
+            <path d="M 720 320 L 780 310 L 800 330 L 790 360 L 760 370 L 730 360 L 720 340 Z" />
+          </g>
+
+          {/* Country borders (subtle) */}
+          <g stroke="hsl(var(--border) / 0.2)" strokeWidth="0.5" fill="none">
+            <path d="M 200 140 L 210 160 M 230 150 L 240 170" />
+            <path d="M 500 140 L 510 150 M 520 145 L 530 155" />
+            <path d="M 600 130 L 620 140 M 680 135 L 700 145" />
+          </g>
+
+          {/* Emergency markers */}
+          {emergencies.map((emergency) => {
+            const { x, y } = projectToSVG(emergency.lat, emergency.lng);
+            return (
+              <g
+                key={emergency.id}
+                onClick={() => setSelectedEmergency(emergency)}
+                style={{ cursor: 'pointer' }}
+              >
+                {/* Pulse rings */}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="20"
+                  fill="none"
+                  stroke={getSeverityColor(emergency.severity)}
+                  strokeWidth="1"
+                  opacity="0.3"
+                  className="animate-ping"
+                />
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="15"
+                  fill="none"
+                  stroke={getSeverityColor(emergency.severity)}
+                  strokeWidth="1"
+                  opacity="0.5"
+                  className="animate-ping"
+                  style={{ animationDelay: '0.5s' }}
+                />
+                
+                {/* Main marker */}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="6"
+                  fill={getSeverityColor(emergency.severity)}
+                  stroke="white"
+                  strokeWidth="2"
+                  className="animate-pulse"
+                />
+                
+                {/* Glow effect */}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="8"
+                  fill={getSeverityColor(emergency.severity)}
+                  opacity="0.3"
+                  filter="blur(4px)"
+                />
+              </g>
+            );
+          })}
+        </svg>
 
         {/* Emergency details popup */}
         {selectedEmergency && (
@@ -193,6 +233,12 @@ const WorldMap = () => {
                   {selectedEmergency.lat.toFixed(4)}, {selectedEmergency.lng.toFixed(4)}
                 </span>
               </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-border/30">
+              <button className="w-full px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors text-sm font-medium">
+                View Details
+              </button>
             </div>
           </div>
         )}
