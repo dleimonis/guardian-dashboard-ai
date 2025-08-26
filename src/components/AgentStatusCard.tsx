@@ -44,7 +44,7 @@ const AgentStatusCard = ({ name, description, status, lastUpdate, type }: AgentS
   const statusColor = getStatusColor(status);
 
   return (
-    <Card className="p-4 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass hover:shadow-glow-secondary transition-all duration-300 animate-slide-up">
+    <Card className={`p-4 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass hover:shadow-glow-secondary transition-all duration-300 animate-slide-up ${status === 'online' ? 'animate-agent-pulse' : ''}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className={`p-2 rounded-lg bg-${statusColor}/20 text-${statusColor}`}>

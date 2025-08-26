@@ -2,6 +2,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Clock, MapPin } from 'lucide-react';
+import { useAudioSystem } from '@/hooks/useAudioSystem';
+import { useEffect } from 'react';
 
 export type AlertSeverity = 'critical' | 'warning' | 'watch';
 
@@ -14,6 +16,7 @@ interface AlertCardProps {
   timestamp: string;
   isAcknowledged?: boolean;
   onAcknowledge?: (id: string) => void;
+  isNew?: boolean;
 }
 
 const AlertCard = ({ 
@@ -24,8 +27,17 @@ const AlertCard = ({
   severity, 
   timestamp, 
   isAcknowledged = false,
-  onAcknowledge 
+  onAcknowledge,
+  isNew = false
 }: AlertCardProps) => {
+  const { playSound } = useAudioSystem();
+
+  useEffect(() => {
+    if (isNew && !isAcknowledged) {
+      playSound(severity === 'critical' ? 'emergency' : 'alert');
+    }
+  }, [isNew, isAcknowledged, severity, playSound]);
+
   const getSeverityColor = (severity: AlertSeverity) => {
     switch (severity) {
       case 'critical':
@@ -43,9 +55,9 @@ const AlertCard = ({
 
   return (
     <Card 
-      className={`p-4 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass animate-slide-up transition-all duration-300 ${
+      className={`p-4 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass transition-all duration-300 ${
         !isAcknowledged && severity === 'critical' ? 'animate-pulse-glow' : 'hover:shadow-glow-secondary'
-      }`}
+      } ${isNew ? 'animate-slide-in-right-glow' : 'animate-slide-up'}`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-2">

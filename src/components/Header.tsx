@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Clock, Globe } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import HeartbeatLine from '@/components/HeartbeatLine';
+import SoundControlPanel from '@/components/SoundControlPanel';
 
 const Header = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -61,6 +63,12 @@ const Header = () => {
           <h1 className="text-xl font-bold text-foreground">Crisis AI</h1>
           <p className="text-xs text-muted-foreground">Command Center</p>
         </div>
+        <HeartbeatLine className="ml-4" />
+      </div>
+
+      {/* Center - Sound Controls */}
+      <div className="flex-1 flex justify-center">
+        <SoundControlPanel />
       </div>
 
       {/* Time and Timezone */}

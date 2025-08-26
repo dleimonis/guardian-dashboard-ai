@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, X } from 'lucide-react';
+import RadarSweep from '@/components/RadarSweep';
 
 interface Emergency {
   id: string;
@@ -86,6 +87,9 @@ const WorldMap = () => {
       </div>
 
       <div className="relative w-full h-full min-h-[400px] bg-surface rounded-lg overflow-hidden">
+        {/* Radar Sweep Overlay */}
+        <RadarSweep />
+        
         {/* Simplified world map SVG */}
         <svg
           viewBox="0 0 800 400"
