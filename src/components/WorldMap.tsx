@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Tooltip } from 'react-leaflet';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, X } from 'lucide-react';
-import RadarSweep from '@/components/RadarSweep';
+import { MapPin, AlertTriangle, Flame, Activity, CloudRain } from 'lucide-react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface Emergency {
   id: string;
@@ -14,16 +16,24 @@ interface Emergency {
   affectedPeople: number;
 }
 
+// Fix for default markers in React-Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
+
 const WorldMap = () => {
   const [selectedEmergency, setSelectedEmergency] = useState<Emergency | null>(null);
 
-  // Mock emergency data
+  // Mock emergency data with real coordinates
   const emergencies: Emergency[] = [
     {
       id: '1',
       lat: 34.0522,
       lng: -118.2437,
-      title: 'Wildfire Alert',
+      title: 'Wildfire Alert - Los Angeles',
       severity: 'critical',
       type: 'Fire',
       affectedPeople: 15000,
@@ -32,7 +42,7 @@ const WorldMap = () => {
       id: '2',
       lat: 35.6762,
       lng: 139.6503,
-      title: 'Earthquake Warning',
+      title: 'Earthquake Warning - Tokyo',
       severity: 'warning',
       type: 'Earthquake',
       affectedPeople: 2000000,
@@ -41,7 +51,7 @@ const WorldMap = () => {
       id: '3',
       lat: 25.7617,
       lng: -80.1918,
-      title: 'Hurricane Watch',
+      title: 'Hurricane Watch - Miami',
       severity: 'warning',
       type: 'Hurricane',
       affectedPeople: 500000,
@@ -50,32 +60,129 @@ const WorldMap = () => {
       id: '4',
       lat: 51.5074,
       lng: -0.1278,
-      title: 'Flood Warning',
+      title: 'Flood Warning - London',
       severity: 'watch',
       type: 'Flood',
       affectedPeople: 50000,
     },
+    {
+      id: '5',
+      lat: -33.8688,
+      lng: 151.2093,
+      title: 'Bushfire Alert - Sydney',
+      severity: 'critical',
+      type: 'Fire',
+      affectedPeople: 75000,
+    },
   ];
-
-  // Convert lat/lng to SVG coordinates (simplified projection)
-  const projectToSVG = (lat: number, lng: number) => {
-    const x = ((lng + 180) / 360) * 1000;
-    const y = ((90 - lat) / 180) * 500;
-    return { x, y };
-  };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return 'hsl(var(--critical))';
+        return '#ef4444'; // red
       case 'warning':
-        return 'hsl(var(--warning))';
+        return '#f59e0b'; // amber
       case 'watch':
-        return 'hsl(var(--success))';
+        return '#22c55e'; // green
       default:
-        return 'hsl(var(--secondary))';
+        return '#3b82f6'; // blue
     }
   };
+
+  const getEmergencyIcon = (type: string) => {
+    switch (type) {
+      case 'Fire':
+        return Flame;
+      case 'Earthquake':
+        return Activity;
+      case 'Hurricane':
+      case 'Flood':
+        return CloudRain;
+      default:
+        return AlertTriangle;
+    }
+  };
+
+  // Custom icon for emergency markers
+  const createCustomIcon = (emergency: Emergency) => {
+    const Icon = getEmergencyIcon(emergency.type);
+    return L.divIcon({
+      html: `
+        <div class="relative">
+          <div class="absolute -inset-4 rounded-full animate-ping" style="background-color: ${getSeverityColor(emergency.severity)}; opacity: 0.3;"></div>
+          <div class="relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg" style="background-color: ${getSeverityColor(emergency.severity)};">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              ${emergency.type === 'Fire' ? '<path d="M12 12c0-3-2-6-6-6 0 3 0 6 3 9-3 0-3 3-3 3s6 0 9-3c0 3-3 6-3 6s6-3 6-9z"/>' : 
+                 emergency.type === 'Earthquake' ? '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>' :
+                 '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5Z"/>'}
+            </svg>
+          </div>
+        </div>
+      `,
+      className: 'custom-emergency-marker',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+    });
+  };
+
+  // Custom styles for the map container
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .custom-emergency-marker {
+        background: transparent !important;
+        border: none !important;
+        text-align: center;
+      }
+      .leaflet-container {
+        background-color: hsl(220 15% 10%);
+        font-family: inherit;
+      }
+      .leaflet-tile-pane {
+        filter: brightness(0.8) contrast(1.2) saturate(0.8);
+      }
+      .leaflet-popup-content-wrapper {
+        background: hsl(220 15% 12% / 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid hsl(220 15% 20%);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px hsl(220 15% 0% / 0.3);
+      }
+      .leaflet-popup-content {
+        color: white;
+        margin: 0;
+        padding: 0;
+      }
+      .leaflet-popup-tip {
+        background: hsl(220 15% 12% / 0.95);
+        border: 1px solid hsl(220 15% 20%);
+      }
+      .leaflet-control-zoom {
+        background: hsl(220 15% 12% / 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid hsl(220 15% 20%) !important;
+      }
+      .leaflet-control-zoom a {
+        background: transparent;
+        color: white;
+        border-bottom: 1px solid hsl(220 15% 20%);
+      }
+      .leaflet-control-zoom a:hover {
+        background: hsl(220 15% 18%);
+      }
+      @keyframes emergencyPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.7; }
+      }
+      .emergency-pulse {
+        animation: emergencyPulse 2s ease-in-out infinite;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   return (
     <Card className="relative p-6 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass h-full">
@@ -86,162 +193,123 @@ const WorldMap = () => {
         </Badge>
       </div>
 
-      <div className="relative w-full h-full min-h-[400px] bg-surface/50 rounded-lg overflow-hidden">
-        {/* Radar Sweep Overlay */}
-        <RadarSweep />
-        
-        {/* World map SVG */}
-        <svg
-          viewBox="0 0 1000 500"
-          className="w-full h-full"
+      <div className="relative w-full h-full min-h-[400px] rounded-lg overflow-hidden">
+        <MapContainer
+          center={[20, 0]}
+          zoom={2}
+          style={{ height: '100%', width: '100%' }}
+          className="rounded-lg"
+          scrollWheelZoom={true}
+          zoomControl={true}
         >
-          {/* Ocean background */}
-          <rect width="1000" height="500" fill="hsl(220 15% 10%)" />
-          
-          {/* Grid lines for reference */}
-          <g stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.3">
-            {[0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000].map(x => (
-              <line key={`v${x}`} x1={x} y1="0" x2={x} y2="500" />
-            ))}
-            {[0, 100, 200, 300, 400, 500].map(y => (
-              <line key={`h${y}`} x1="0" y1={y} x2="1000" y2={y} />
-            ))}
-          </g>
-
-          {/* Simplified world continents - more recognizable shapes */}
-          <g fill="hsl(220 15% 18%)" stroke="hsl(var(--secondary) / 0.5)" strokeWidth="1">
-            {/* North America */}
-            <path d="M 150 150 Q 200 120 250 140 L 280 160 L 290 180 L 280 200 L 260 220 L 240 240 L 220 250 L 200 240 L 180 220 L 160 200 L 150 180 Z" />
-            
-            {/* South America */}
-            <path d="M 220 260 L 240 280 L 250 320 L 240 360 L 220 400 L 200 420 L 180 400 L 170 360 L 180 320 L 190 280 L 210 260 Z" />
-            
-            {/* Europe */}
-            <path d="M 480 140 L 520 130 L 540 140 L 530 160 L 510 170 L 490 160 L 480 150 Z" />
-            
-            {/* Africa */}
-            <path d="M 470 200 L 510 190 L 530 210 L 540 250 L 530 300 L 510 340 L 490 360 L 470 340 L 460 300 L 460 250 L 470 210 Z" />
-            
-            {/* Asia */}
-            <path d="M 550 120 L 650 110 L 750 130 L 800 150 L 820 180 L 800 200 L 750 190 L 700 180 L 650 170 L 600 160 L 550 150 Z" />
-            
-            {/* Australia */}
-            <path d="M 720 320 L 780 310 L 800 330 L 790 360 L 760 370 L 730 360 L 720 340 Z" />
-          </g>
-
-          {/* Country borders (subtle) */}
-          <g stroke="hsl(var(--border) / 0.2)" strokeWidth="0.5" fill="none">
-            <path d="M 200 140 L 210 160 M 230 150 L 240 170" />
-            <path d="M 500 140 L 510 150 M 520 145 L 530 155" />
-            <path d="M 600 130 L 620 140 M 680 135 L 700 145" />
-          </g>
+          {/* Dark themed tile layer */}
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
 
           {/* Emergency markers */}
-          {emergencies.map((emergency) => {
-            const { x, y } = projectToSVG(emergency.lat, emergency.lng);
-            return (
-              <g
-                key={emergency.id}
-                onClick={() => setSelectedEmergency(emergency)}
-                style={{ cursor: 'pointer' }}
-              >
-                {/* Pulse rings */}
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="20"
-                  fill="none"
-                  stroke={getSeverityColor(emergency.severity)}
-                  strokeWidth="1"
-                  opacity="0.3"
-                  className="animate-ping"
-                />
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="15"
-                  fill="none"
-                  stroke={getSeverityColor(emergency.severity)}
-                  strokeWidth="1"
-                  opacity="0.5"
-                  className="animate-ping"
-                  style={{ animationDelay: '0.5s' }}
-                />
-                
-                {/* Main marker */}
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="6"
-                  fill={getSeverityColor(emergency.severity)}
-                  stroke="white"
-                  strokeWidth="2"
-                  className="animate-pulse"
-                />
-                
-                {/* Glow effect */}
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="8"
-                  fill={getSeverityColor(emergency.severity)}
-                  opacity="0.3"
-                  filter="blur(4px)"
-                />
-              </g>
-            );
-          })}
-        </svg>
+          {emergencies.map((emergency) => (
+            <Marker
+              key={emergency.id}
+              position={[emergency.lat, emergency.lng]}
+              icon={createCustomIcon(emergency)}
+              eventHandlers={{
+                click: () => setSelectedEmergency(emergency),
+              }}
+            >
+              <Popup className="custom-popup">
+                <div className="p-4 min-w-[250px]">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <h3 className="font-semibold text-white">{emergency.title}</h3>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Type:</span>
+                      <span className="text-white">{emergency.type}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Severity:</span>
+                      <Badge 
+                        variant="secondary"
+                        className="text-xs capitalize"
+                        style={{ 
+                          backgroundColor: `${getSeverityColor(emergency.severity)}20`,
+                          color: getSeverityColor(emergency.severity),
+                          borderColor: getSeverityColor(emergency.severity)
+                        }}
+                      >
+                        {emergency.severity}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Affected:</span>
+                      <span className="text-white">{emergency.affectedPeople.toLocaleString()} people</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Coordinates:</span>
+                      <span className="text-white font-mono text-xs">
+                        {emergency.lat.toFixed(4)}, {emergency.lng.toFixed(4)}
+                      </span>
+                    </div>
+                  </div>
 
-        {/* Emergency details popup */}
-        {selectedEmergency && (
-          <div className="absolute top-4 right-4 w-80 bg-gradient-surface backdrop-blur-glass border border-border/50 rounded-lg p-4 shadow-glass animate-slide-up">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4 text-primary" />
-                <h3 className="font-semibold text-foreground">{selectedEmergency.title}</h3>
-              </div>
-              <button
-                onClick={() => setSelectedEmergency(null)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Type:</span>
-                <span className="text-foreground">{selectedEmergency.type}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Severity:</span>
-                <Badge 
-                  variant="secondary"
-                  className={`text-xs bg-${selectedEmergency.severity}/20 text-${selectedEmergency.severity}-foreground border-${selectedEmergency.severity}/30 capitalize`}
-                >
-                  {selectedEmergency.severity}
-                </Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Affected:</span>
-                <span className="text-foreground">{selectedEmergency.affectedPeople.toLocaleString()} people</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Coordinates:</span>
-                <span className="text-foreground font-mono text-xs">
-                  {selectedEmergency.lat.toFixed(4)}, {selectedEmergency.lng.toFixed(4)}
-                </span>
-              </div>
-            </div>
+                  <div className="mt-4 pt-3 border-t border-gray-700">
+                    <button className="w-full px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors text-sm font-medium">
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              </Popup>
 
-            <div className="mt-4 pt-3 border-t border-border/30">
-              <button className="w-full px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors text-sm font-medium">
-                View Details
-              </button>
+              <Tooltip direction="top" offset={[0, -10]} opacity={0.9}>
+                <div className="text-xs">
+                  <div className="font-semibold">{emergency.title}</div>
+                  <div className="text-gray-300">Click for details</div>
+                </div>
+              </Tooltip>
+            </Marker>
+          ))}
+
+          {/* Circle overlays for affected areas */}
+          {emergencies.map((emergency) => (
+            <CircleMarker
+              key={`circle-${emergency.id}`}
+              center={[emergency.lat, emergency.lng]}
+              radius={Math.sqrt(emergency.affectedPeople / 1000) * 2}
+              pathOptions={{
+                fillColor: getSeverityColor(emergency.severity),
+                fillOpacity: 0.1,
+                color: getSeverityColor(emergency.severity),
+                weight: 1,
+                opacity: 0.3,
+              }}
+            />
+          ))}
+        </MapContainer>
+
+        {/* Legend */}
+        <div className="absolute bottom-4 left-4 bg-gradient-surface backdrop-blur-glass border border-border/50 rounded-lg p-3 shadow-glass z-[1000]">
+          <h4 className="text-xs font-semibold text-foreground mb-2">Severity Levels</h4>
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-critical"></div>
+              <span className="text-muted-foreground">Critical</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-warning"></div>
+              <span className="text-muted-foreground">Warning</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-success"></div>
+              <span className="text-muted-foreground">Watch</span>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </Card>
   );
