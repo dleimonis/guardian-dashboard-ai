@@ -67,13 +67,13 @@ const WorldMap = () => {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return '#ff4444';
+        return 'hsl(var(--critical))';
       case 'warning':
-        return '#ff8800';
+        return 'hsl(var(--warning))';
       case 'watch':
-        return '#ffaa00';
+        return 'hsl(var(--success))';
       default:
-        return '#4488ff';
+        return 'hsl(var(--secondary))';
     }
   };
 
@@ -94,7 +94,7 @@ const WorldMap = () => {
         <svg
           viewBox="0 0 800 400"
           className="w-full h-full"
-          style={{ filter: 'brightness(0.3)' }}
+          style={{ filter: 'brightness(0.6)' }}
         >
           {/* Simple world map outline */}
           <rect width="800" height="400" fill="hsl(var(--surface))" />
@@ -104,21 +104,25 @@ const WorldMap = () => {
             d="M150 100 L300 80 L350 120 L300 180 L200 200 L120 150 Z"
             fill="hsl(var(--surface-elevated))"
             stroke="hsl(var(--border))"
+            strokeWidth="1"
           />
           <path
             d="M400 90 L600 70 L650 100 L600 160 L500 180 L420 140 Z"
             fill="hsl(var(--surface-elevated))"
             stroke="hsl(var(--border))"
+            strokeWidth="1"
           />
           <path
             d="M100 220 L280 200 L320 250 L280 320 L150 340 L80 280 Z"
             fill="hsl(var(--surface-elevated))"
             stroke="hsl(var(--border))"
+            strokeWidth="1"
           />
           <path
             d="M500 200 L700 180 L750 220 L700 280 L600 300 L520 260 Z"
             fill="hsl(var(--surface-elevated))"
             stroke="hsl(var(--border))"
+            strokeWidth="1"
           />
         </svg>
 

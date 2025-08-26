@@ -122,6 +122,16 @@ All colors MUST be HSL.
     }
   }
   
+  /* Ensure proper visibility for dynamic content */
+  .ticker-container {
+    @apply relative overflow-hidden;
+  }
+  
+  .ticker-content {
+    @apply flex items-center space-x-8;
+    animation: scroll 60s linear infinite;
+  }
+  
   /* Status indicator glow */
   .status-online {
     @apply bg-success shadow-glow-secondary;

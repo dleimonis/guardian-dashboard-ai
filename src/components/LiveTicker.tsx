@@ -51,7 +51,7 @@ const LiveTicker = () => {
       };
 
       setTickerItems(prev => [newItem, ...prev.slice(0, 4)]);
-    }, 8000);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, []);
@@ -79,7 +79,7 @@ const LiveTicker = () => {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <div className="flex space-x-8 animate-scroll">
+        <div className="flex space-x-8 animate-[scroll_60s_linear_infinite]">
           {tickerItems.map((item) => (
             <div key={item.id} className="flex items-center space-x-3 whitespace-nowrap animate-slide-up">
               <Badge 
