@@ -18,6 +18,11 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Crisis-specific variants using design system
+        crisis: "bg-gradient-primary text-primary-foreground hover:shadow-glow transition-all duration-300",
+        agent: "bg-surface-glass backdrop-blur-glass border border-secondary/30 text-secondary-foreground hover:bg-secondary/20 hover:shadow-glow-secondary",
+        emergency: "bg-gradient-to-br from-critical to-critical/80 text-critical-foreground hover:from-critical-glow hover:to-critical shadow-glow border-2 border-critical/50",
+        glass: "bg-surface-glass backdrop-blur-glass border border-border/50 text-foreground hover:bg-surface-elevated hover:shadow-glow-secondary"
       },
       size: {
         default: "h-10 px-4 py-2",

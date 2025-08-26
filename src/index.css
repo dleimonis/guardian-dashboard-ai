@@ -8,89 +8,83 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* JARVIS-inspired Crisis Command Center Design System */
+    
+    /* Base colors - Deep space black with subtle blue undertones */
+    --background: 220 15% 6%;
+    --foreground: 0 0% 95%;
+    
+    /* Surface colors - Glass morphism layers */
+    --surface: 220 15% 8%;
+    --surface-glass: 220 15% 12%;
+    --surface-elevated: 220 15% 15%;
+    
+    /* Card colors with transparency for glass effect */
+    --card: 220 15% 8%;
+    --card-foreground: 0 0% 95%;
+    --card-glass: 220 15% 12%;
+    
+    /* Popover colors */
+    --popover: 220 15% 8%;
+    --popover-foreground: 0 0% 95%;
+    
+    /* Primary - Crisis red/orange for alerts and emphasis */
+    --primary: 12 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 12 100% 70%;
+    
+    /* Secondary - Cool tech blue for normal operations */
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-glow: 217 91% 70%;
+    
+    /* Status colors */
+    --success: 120 100% 50%;
+    --success-foreground: 0 0% 100%;
+    --success-glow: 120 100% 60%;
+    
+    --warning: 45 100% 60%;
+    --warning-foreground: 0 0% 100%;
+    --warning-glow: 45 100% 70%;
+    
+    --critical: 0 100% 60%;
+    --critical-foreground: 0 0% 100%;
+    --critical-glow: 0 100% 70%;
+    
+    /* Muted colors for secondary text */
+    --muted: 220 15% 25%;
+    --muted-foreground: 220 15% 65%;
+    
+    /* Accent colors */
+    --accent: 220 15% 15%;
+    --accent-foreground: 0 0% 95%;
+    
+    /* Destructive */
+    --destructive: 0 100% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders and inputs with subtle glow */
+    --border: 220 15% 20%;
+    --border-glow: 220 15% 30%;
+    --input: 220 15% 15%;
+    --ring: 217 91% 60%;
+    
+    /* Border radius for futuristic look */
+    --radius: 0.75rem;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(12 100% 60%), hsl(25 100% 55%));
+    --gradient-secondary: linear-gradient(135deg, hsl(217 91% 60%), hsl(240 100% 70%));
+    --gradient-surface: linear-gradient(135deg, hsl(220 15% 8% / 0.8), hsl(220 15% 12% / 0.9));
+    
+    /* Shadows with glow effects */
+    --shadow-glow: 0 0 20px hsl(var(--primary) / 0.3);
+    --shadow-glow-secondary: 0 0 15px hsl(var(--secondary) / 0.2);
+    --shadow-glass: 0 8px 32px hsl(220 15% 0% / 0.3);
+    
+    /* Animation durations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
@@ -101,5 +95,46 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Glass morphism utilities */
+  .glass-panel {
+    @apply bg-surface-glass backdrop-blur-glass border border-border/50 shadow-glass;
+  }
+  
+  .glass-card {
+    @apply bg-gradient-surface backdrop-blur-glass border border-border/50 shadow-glass;
+  }
+  
+  /* Scrolling ticker animation */
+  .animate-scroll {
+    animation: scroll 60s linear infinite;
+  }
+  
+  @keyframes scroll {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  
+  /* Status indicator glow */
+  .status-online {
+    @apply bg-success shadow-glow-secondary;
+    box-shadow: 0 0 10px hsl(var(--success) / 0.5);
+  }
+  
+  .status-warning {
+    @apply bg-warning;
+    box-shadow: 0 0 10px hsl(var(--warning) / 0.5);
+  }
+  
+  .status-critical {
+    @apply bg-critical;
+    box-shadow: 0 0 10px hsl(var(--critical) / 0.5);
   }
 }
