@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import Header from '@/components/Header';
 import AgentStatusCard from '@/components/AgentStatusCard';
 import AlertCard from '@/components/AlertCard';
@@ -8,6 +9,7 @@ import EmergencyButton from '@/components/EmergencyButton';
 import LiveTicker from '@/components/LiveTicker';
 
 const Index = () => {
+  console.log('Index component rendering...');
   const [acknowledgedAlerts, setAcknowledgedAlerts] = useState<Set<string>>(new Set());
 
   // Mock data for agents
@@ -93,9 +95,13 @@ const Index = () => {
   const activeEmergencies = alerts.filter(alert => alert.severity === 'critical').length;
   const systemStatus = agents.some(agent => agent.status === 'warning') ? 'degraded' : 'online';
 
+  console.log('Index component returning JSX...');
+  
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <ErrorBoundary fallback={<div className="p-4 text-warning">Header failed to load</div>}>
+        <Header />
+      </ErrorBoundary>
       
       <div className="flex h-[calc(100vh-128px)]">
         {/* Left Sidebar - Agent Status */}
@@ -118,13 +124,17 @@ const Index = () => {
 
         {/* Main Content Area */}
         <div className="flex-1 p-6">
-          <StatisticsBar
-            activeEmergencies={activeEmergencies}
-            peopleWarned={1247893}
-            responseTime={18}
-            systemStatus={systemStatus as 'online' | 'degraded' | 'offline'}
-          />
-          <WorldMap />
+          <ErrorBoundary fallback={<div className="p-4 text-warning">Statistics failed to load</div>}>
+            <StatisticsBar
+              activeEmergencies={activeEmergencies}
+              peopleWarned={1247893}
+              responseTime={18}
+              systemStatus={systemStatus as 'online' | 'degraded' | 'offline'}
+            />
+          </ErrorBoundary>
+          <ErrorBoundary fallback={<div className="p-4 text-warning">Map failed to load</div>}>
+            <WorldMap />
+          </ErrorBoundary>
         </div>
 
         {/* Right Sidebar - Alert Feed */}
@@ -155,10 +165,14 @@ const Index = () => {
       </div>
 
       {/* Bottom Ticker */}
-      <LiveTicker />
+      <ErrorBoundary fallback={<div className="p-2 text-warning text-center">Live updates unavailable</div>}>
+        <LiveTicker />
+      </ErrorBoundary>
 
       {/* Emergency Button */}
-      <EmergencyButton />
+      <ErrorBoundary fallback={null}>
+        <EmergencyButton />
+      </ErrorBoundary>
     </div>
   );
 };

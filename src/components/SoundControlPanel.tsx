@@ -5,7 +5,8 @@ import { Slider } from '@/components/ui/slider';
 import { useAudioSystem, SoundProfile } from '@/hooks/useAudioSystem';
 
 const SoundControlPanel = () => {
-  const { isEnabled, volume, profile, isPlaying, toggleSound, setVolume, setProfile, playSound } = useAudioSystem();
+  try {
+    const { isEnabled, volume, profile, isPlaying, toggleSound, setVolume, setProfile, playSound } = useAudioSystem();
 
   const soundProfiles: SoundProfile[] = ['Red Alert', 'Subtle', 'Voice Only'];
 
@@ -13,11 +14,15 @@ const SoundControlPanel = () => {
     setVolume(value[0]);
   };
 
-  const handleTestSound = () => {
-    playSound('test');
-  };
+    const handleTestSound = () => {
+      try {
+        playSound('test');
+      } catch (error) {
+        console.warn('Failed to play test sound:', error);
+      }
+    };
 
-  return (
+    return (
     <div className="flex items-center space-x-4">
       {/* Sound Toggle */}
       <Button
@@ -82,7 +87,19 @@ const SoundControlPanel = () => {
         </Button>
       )}
     </div>
-  );
+    );
+  } catch (error) {
+    console.error('SoundControlPanel render error:', error);
+    // Fallback UI for sound controls
+    return (
+      <div className="flex items-center space-x-4">
+        <Button variant="glass" size="sm" disabled className="p-2">
+          <VolumeX className="w-4 h-4 text-muted-foreground" />
+        </Button>
+        <span className="text-xs text-muted-foreground">Audio unavailable</span>
+      </div>
+    );
+  }
 };
 
 export default SoundControlPanel;

@@ -21,23 +21,36 @@ export const useAudioSystem = () => {
   const gainNodeRef = useRef<GainNode | null>(null);
 
   useEffect(() => {
-    // Initialize Web Audio API
+    // Initialize Web Audio API with better error handling
     const initAudio = async () => {
       try {
+        // Check if Web Audio API is supported
+        if (!window.AudioContext && !(window as any).webkitAudioContext) {
+          console.warn('Web Audio API not supported in this browser');
+          return;
+        }
+
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         gainNodeRef.current = audioContextRef.current.createGain();
         gainNodeRef.current.connect(audioContextRef.current.destination);
         gainNodeRef.current.gain.value = state.volume;
+        console.log('Audio system initialized successfully');
       } catch (error) {
         console.warn('Audio context initialization failed:', error);
+        // Gracefully degrade - disable audio features
+        setState(prev => ({ ...prev, isEnabled: false }));
       }
     };
 
     initAudio();
 
     return () => {
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
+      try {
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+        }
+      } catch (error) {
+        console.warn('Error closing audio context:', error);
       }
     };
   }, []);

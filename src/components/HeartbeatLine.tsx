@@ -1,5 +1,6 @@
 const HeartbeatLine = ({ className = "" }: { className?: string }) => {
-  return (
+  try {
+    return (
     <div className={`flex items-center ${className}`}>
       <svg
         width="60"
@@ -29,7 +30,16 @@ const HeartbeatLine = ({ className = "" }: { className?: string }) => {
         />
       </svg>
     </div>
-  );
+    );
+  } catch (error) {
+    console.error('HeartbeatLine render error:', error);
+    // Fallback to simple indicator
+    return (
+      <div className={`flex items-center ${className}`}>
+        <div className="w-3 h-3 bg-success rounded-full animate-pulse" />
+      </div>
+    );
+  }
 };
 
 export default HeartbeatLine;
