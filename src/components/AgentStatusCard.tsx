@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Eye, Activity, CloudRain, Waves } from 'lucide-react';
 
-export type AgentStatus = 'online' | 'warning' | 'offline';
+export type AgentStatus = 'online' | 'warning' | 'offline' | 'error';
 
 interface AgentStatusCardProps {
   name: string;
@@ -16,13 +16,15 @@ const AgentStatusCard = ({ name, description, status, lastUpdate, type }: AgentS
   const getStatusColor = (status: AgentStatus) => {
     switch (status) {
       case 'online':
-        return 'success';
+        return 'bg-success/20 text-success border-success/30';
       case 'warning':
-        return 'warning';
+        return 'bg-warning/20 text-warning border-warning/30';
+      case 'error':
+        return 'bg-destructive/20 text-destructive border-destructive/30';
       case 'offline':
-        return 'critical';
+        return 'bg-muted text-muted-foreground border-border';
       default:
-        return 'success';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
@@ -41,13 +43,45 @@ const AgentStatusCard = ({ name, description, status, lastUpdate, type }: AgentS
     }
   };
 
+  const getStatusDotColor = (status: AgentStatus) => {
+    switch (status) {
+      case 'online':
+        return 'bg-success';
+      case 'warning':
+        return 'bg-warning';
+      case 'error':
+        return 'bg-destructive';
+      case 'offline':
+        return 'bg-muted-foreground';
+      default:
+        return 'bg-muted-foreground';
+    }
+  };
+
+  const getStatusIconColor = (status: AgentStatus) => {
+    switch (status) {
+      case 'online':
+        return 'bg-success/20 text-success';
+      case 'warning':
+        return 'bg-warning/20 text-warning';
+      case 'error':
+        return 'bg-destructive/20 text-destructive';  
+      case 'offline':
+        return 'bg-muted/20 text-muted-foreground';
+      default:
+        return 'bg-muted/20 text-muted-foreground';
+    }
+  };
+
   const statusColor = getStatusColor(status);
+  const statusDotColor = getStatusDotColor(status);
+  const statusIconColor = getStatusIconColor(status);
 
   return (
     <Card className={`p-4 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass hover:shadow-glow-secondary transition-all duration-300 animate-slide-up ${status === 'online' ? 'animate-agent-pulse' : ''}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-lg bg-${statusColor}/20 text-${statusColor}`}>
+          <div className={`p-2 rounded-lg ${statusIconColor}`}>
             {getIcon(type)}
           </div>
           <div>
@@ -57,10 +91,10 @@ const AgentStatusCard = ({ name, description, status, lastUpdate, type }: AgentS
         </div>
         
         <div className="flex flex-col items-end space-y-1">
-          <div className={`w-3 h-3 rounded-full bg-${statusColor} shadow-glow-secondary animate-pulse`} />
+          <div className={`w-3 h-3 rounded-full ${statusDotColor} shadow-glow-secondary animate-pulse`} />
           <Badge 
             variant="secondary" 
-            className={`text-xs bg-${statusColor}/20 text-${statusColor}-foreground border-${statusColor}/30 capitalize`}
+            className={`text-xs ${statusColor} capitalize`}
           >
             {status}
           </Badge>
