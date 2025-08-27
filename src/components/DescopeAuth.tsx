@@ -66,16 +66,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
   // Initialize Descope Flow
   useEffect(() => {
     const loadDescopeFlow = async () => {
-      const projectId = import.meta.env.VITE_DESCOPE_PROJECT_ID;
-      
-      // If no project ID is configured, skip to demo mode
-      if (!projectId || projectId === 'YOUR_PROJECT_ID') {
-        console.log('No Descope project ID configured, using demo mode');
-        setTimeout(() => {
-          handleDescopeSuccess('demo_token_' + Date.now());
-        }, 1500);
-        return;
-      }
+      const projectId = import.meta.env.VITE_DESCOPE_PROJECT_ID || 'P31sYu11ghqKWlnCob2qq2n9fvcN';
 
       try {
         // Load Descope SDK
@@ -255,20 +246,16 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
 
         {authStep === 'login' && (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Demo Mode - Authentication</h2>
-            <div className="text-center py-8">
-              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Initializing demo authentication...</p>
-            </div>
-            <div id="descope-container" className="min-h-[200px]" />
+            <h2 className="text-xl font-semibold">Sign In to Continue</h2>
+            <div id="descope-container" className="min-h-[400px]" />
             
             <div className="text-sm text-muted-foreground space-y-2 p-4 bg-surface/50 rounded-lg">
-              <p className="font-medium">Demo Mode Active</p>
+              <p className="font-medium">Why Descope Authentication?</p>
               <ul className="list-disc list-inside space-y-1">
-                <li>Using demo authentication for testing</li>
-                <li>Configure VITE_DESCOPE_PROJECT_ID for production</li>
-                <li>API keys are stored temporarily in demo mode</li>
-                <li>Enterprise-grade security available with Descope</li>
+                <li>Secure token management for all external APIs</li>
+                <li>No passwords stored in our system</li>
+                <li>Automatic token refresh and rotation</li>
+                <li>Enterprise-grade security compliance</li>
               </ul>
             </div>
           </div>
