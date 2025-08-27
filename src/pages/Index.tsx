@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useEmergency } from '@/contexts/EmergencyContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Header from '@/components/Header';
 import AgentStatusCard from '@/components/AgentStatusCard';
@@ -11,89 +12,63 @@ import LiveTicker from '@/components/LiveTicker';
 const Index = () => {
   console.log('Index component rendering...');
   const [acknowledgedAlerts, setAcknowledgedAlerts] = useState<Set<string>>(new Set());
+  const { alerts: contextAlerts, agentStatuses, isConnected, acknowledgeAlert: contextAcknowledgeAlert } = useEmergency();
 
-  // Mock data for agents
-  const agents = [
-    {
-      name: 'FireWatcher',
-      description: 'Monitoring NASA Satellites',
-      status: 'online' as const,
-      type: 'fire' as const,
-      lastUpdate: '2 min ago',
-    },
-    {
-      name: 'QuakeDetector',
-      description: 'Scanning Seismic Activity',
-      status: 'online' as const,
-      type: 'earthquake' as const,
-      lastUpdate: '1 min ago',
-    },
-    {
-      name: 'WeatherTracker',
-      description: 'Analyzing Storm Patterns',
-      status: 'warning' as const,
-      type: 'weather' as const,
-      lastUpdate: '5 min ago',
-    },
-    {
-      name: 'FloodMonitor',
-      description: 'Checking Water Levels',
-      status: 'online' as const,
-      type: 'flood' as const,
-      lastUpdate: '3 min ago',
-    },
-  ];
+  // Convert agent statuses to display format
+  const agents = useMemo(() => {
+    const defaultAgents = [
+      { name: 'FireWatcher', description: 'Monitoring NASA Satellites', type: 'fire' as const },
+      { name: 'QuakeDetector', description: 'Scanning Seismic Activity', type: 'earthquake' as const },
+      { name: 'WeatherTracker', description: 'Analyzing Storm Patterns', type: 'weather' as const },
+      { name: 'FloodMonitor', description: 'Checking Water Levels', type: 'flood' as const },
+    ];
 
-  // Mock data for alerts
-  const alerts = [
-    {
-      id: '1',
-      title: 'Wildfire Spreading',
-      description: 'Fire detected in Los Angeles County. Wind conditions deteriorating. Immediate evacuation recommended for Zone 7.',
-      location: 'Los Angeles, CA',
-      severity: 'critical' as const,
-      timestamp: '14:23',
-    },
-    {
-      id: '2',
-      title: 'Hurricane Approaching',
-      description: 'Category 3 hurricane tracking towards Miami coastline. Expected landfall in 18 hours.',
-      location: 'Miami, FL',
-      severity: 'warning' as const,
-      timestamp: '14:18',
-    },
-    {
-      id: '3',
-      title: 'Flood Warning',
-      description: 'River levels rising rapidly due to heavy rainfall. Potential overflow in low-lying areas.',
-      location: 'Houston, TX',
-      severity: 'warning' as const,
-      timestamp: '14:15',
-    },
-    {
-      id: '4',
-      title: 'Seismic Activity',
-      description: 'Minor earthquake swarm detected. Monitoring for potential larger events.',
-      location: 'San Francisco, CA',
-      severity: 'watch' as const,
-      timestamp: '14:12',
-    },
-    {
-      id: '5',
-      title: 'Severe Weather',
-      description: 'Tornado warning issued for multiple counties. Take shelter immediately.',
-      location: 'Oklahoma City, OK',
-      severity: 'critical' as const,
-      timestamp: '14:08',
-    },
-  ];
+    return defaultAgents.map(agent => {
+      const status = agentStatuses[agent.name];
+      return {
+        ...agent,
+        status: (status?.status || 'online') as 'online' | 'warning' | 'offline' | 'error',
+        lastUpdate: status?.lastActivity ? 
+          `${Math.floor((Date.now() - new Date(status.lastActivity).getTime()) / 60000)} min ago` :
+          '1 min ago',
+      };
+    });
+  }, [agentStatuses]);
 
-  const handleAcknowledgeAlert = (alertId: string) => {
+  // Use context alerts or fallback to mock data
+  const alerts = useMemo(() => {
+    if (contextAlerts && contextAlerts.length > 0) {
+      return contextAlerts.map(alert => ({
+        id: alert.id,
+        title: alert.title,
+        description: alert.description || '',
+        location: typeof alert.location === 'string' ? alert.location : 'Unknown',
+        severity: (alert.severity || 'warning') as 'critical' | 'warning' | 'watch',
+        timestamp: new Date(alert.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      }));
+    }
+    
+    // Fallback mock data
+    return [
+      {
+        id: '1',
+        title: 'System Active',
+        description: isConnected ? 'Connected to emergency monitoring system' : 'Running in demo mode',
+        location: 'System Wide',
+        severity: 'watch' as const,
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      },
+    ];
+  }, [contextAlerts, isConnected]);
+
+  const handleAcknowledgeAlert = async (alertId: string) => {
     setAcknowledgedAlerts(prev => new Set([...prev, alertId]));
+    // Also acknowledge in context
+    await contextAcknowledgeAlert(alertId);
   };
 
   const activeEmergencies = alerts.filter(alert => alert.severity === 'critical').length;
-  const systemStatus = agents.some(agent => agent.status === 'warning') ? 'degraded' : 'online';
+  const systemStatus = !isConnected ? 'offline' : agents.some(agent => agent.status === 'warning') ? 'degraded' : 'online';
 
   console.log('Index component returning JSX...');
   
@@ -146,6 +121,7 @@ const Index = () => {
             </div>
             <div className="text-sm text-muted-foreground">
               {alerts.filter(alert => !acknowledgedAlerts.has(alert.id)).length} unread
+              {!isConnected && ' (Offline)'}
             </div>
           </h2>
           {alerts.map((alert) => (
