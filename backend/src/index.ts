@@ -7,9 +7,11 @@ import winston from 'winston';
 import { disasterRoutes } from './routes/disasters';
 import { alertRoutes } from './routes/alerts';
 import { agentRoutes } from './routes/agents';
+import { createAuthRoutes } from './routes/auth';
 import { WebSocketManager } from './services/websocket';
 import { AgentOrchestrator } from './agents/orchestrator';
 import { DisasterMonitoringService } from './services/monitoring';
+import { DescopeAuthService } from './services/descope-auth';
 
 dotenv.config();
 
@@ -32,6 +34,12 @@ const logger = winston.createLogger({
 const app = express();
 const port = process.env.PORT || 3001;
 
+// Initialize Descope Auth Service
+const authService = new DescopeAuthService({
+  projectId: process.env.DESCOPE_PROJECT_ID!,
+  managementKey: process.env.DESCOPE_MANAGEMENT_KEY
+}, logger);
+
 // Middleware
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:8080'], // Vite dev servers
@@ -50,6 +58,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', createAuthRoutes(authService, logger));
 app.use('/api/disasters', disasterRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/agents', agentRoutes);

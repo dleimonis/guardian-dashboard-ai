@@ -6,12 +6,12 @@ import { Shield, CheckCircle, AlertCircle, Key, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface DescopeAuthProps {
-  onAuthenticated: (token: string, apiTokens: any) => void;
+  onAuthenticated: (data: { token: string; services: Record<string, string>; user: any }) => void;
 }
 
 interface ConnectedService {
   name: string;
-  connected: boolean;
+  connected: 'connected' | 'disconnected' | 'pending';
   required: boolean;
   description: string;
   keyName?: string;
@@ -26,7 +26,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
   const [connectedServices, setConnectedServices] = useState<ConnectedService[]>([
     { 
       name: 'NASA FIRMS API', 
-      connected: false, 
+      connected: 'disconnected', 
       required: true, 
       description: 'Fire detection from satellites',
       keyName: 'nasa_map_key',
@@ -35,7 +35,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
     },
     { 
       name: 'USGS Earthquake', 
-      connected: false, 
+      connected: 'connected', 
       required: false, 
       description: 'Real-time earthquake monitoring (Public API - no key needed)',
       keyName: 'usgs_api_key',
@@ -44,7 +44,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
     },
     { 
       name: 'NOAA Weather', 
-      connected: false, 
+      connected: 'connected', 
       required: false, 
       description: 'Weather and storm tracking (Public API - no key needed)',
       keyName: 'noaa_api_key',
@@ -53,7 +53,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
     },
     { 
       name: 'Twilio SMS', 
-      connected: false, 
+      connected: 'disconnected', 
       required: false, 
       description: 'Send emergency alerts via SMS (Optional)',
       keyName: 'twilio_auth_token',
@@ -126,6 +126,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
 
   const handleDescopeSuccess = async (token: string) => {
     setDescopeToken(token);
+    localStorage.setItem('auth_token', token);
     setAuthStep('connect');
     
     toast({
@@ -138,7 +139,11 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
     setConnectedServices(prev => 
       prev.map(service => 
         service.name === serviceName 
-          ? { ...service, keyValue, connected: keyValue.length > 0 && keyValue !== 'PUBLIC' }
+          ? { 
+              ...service, 
+              keyValue, 
+              connected: keyValue.length > 0 || keyValue === 'PUBLIC' ? 'connected' : 'disconnected'
+            }
           : service
       )
     );
@@ -148,47 +153,55 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
     setIsLoading(true);
     
     try {
-      // Save API keys to Descope user custom attributes
-      const apiKeys: Record<string, string> = {};
+      // Get keys that have been configured
+      const configuredKeys: Record<string, string> = {};
       
-      for (const service of connectedServices) {
-        if (service.keyName && service.keyValue) {
-          apiKeys[service.keyName] = service.keyValue;
+      connectedServices.forEach(service => {
+        if (service.keyValue && service.keyValue.trim()) {
+          configuredKeys[service.name] = service.keyValue.trim();
         }
-      }
-
-      // Send to backend to store in Descope
-      const response = await fetch('/api/auth/save-api-keys', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${descopeToken}`,
-        },
-        body: JSON.stringify({ apiKeys }),
       });
 
-      if (response.ok) {
-        // Mark services as connected
-        setConnectedServices(prev => 
-          prev.map(service => ({
-            ...service,
-            connected: service.keyValue ? service.keyValue.length > 0 : false
-          }))
-        );
-        
+      if (Object.keys(configuredKeys).length === 0) {
         toast({
-          title: 'API Keys Saved',
-          description: 'Your API keys have been securely stored in Descope.',
+          title: "No Keys Configured",
+          description: "Please configure at least one API key to continue.",
+          variant: "destructive",
         });
-      } else {
-        throw new Error('Failed to save API keys');
+        return;
       }
-    } catch (error) {
-      console.error('Error saving API keys:', error);
+
+      // Send to backend API to store in Descope
+      const { apiService } = await import('../services/api');
+      await apiService.saveApiKeys(configuredKeys);
+      
+      // Mark services as connected
+      setConnectedServices(prev => prev.map(service => ({
+        ...service,
+        connected: service.keyValue && service.keyValue.trim() ? 'connected' : 'disconnected'
+      })));
+
       toast({
-        title: 'Save Failed',
-        description: 'Failed to save API keys. Please try again.',
-        variant: 'destructive',
+        title: "Success",
+        description: "API keys have been saved securely.",
+      });
+
+      // Auto-advance to ready state if we have required services
+      const requiredServices = connectedServices.filter(s => s.required);
+      const connectedRequired = requiredServices.filter(s => 
+        configuredKeys[s.name] || s.connected === 'connected'
+      );
+      
+      if (connectedRequired.length === requiredServices.length) {
+        setTimeout(() => setAuthStep('ready'), 1000);
+      }
+      
+    } catch (error) {
+      console.error('Failed to save API keys:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save API keys. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -196,41 +209,40 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
   };
 
   const proceedToApp = async () => {
-    if (!descopeToken) return;
-    
-    // Check if all required services are connected
-    const requiredConnected = connectedServices
-      .filter(s => s.required)
-      .every(s => s.connected);
-    
-    if (!requiredConnected) {
-      toast({
-        title: 'Required Services Missing',
-        description: 'Please connect all required services before proceeding.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Fetch all API tokens from backend
     try {
-      const response = await fetch('/api/auth/tokens', {
-        headers: { 'Authorization': `Bearer ${descopeToken}` },
+      // Verify required services are connected
+      const requiredServices = connectedServices.filter(s => s.required);
+      const connectedRequired = requiredServices.filter(s => s.connected === 'connected');
+      
+      if (connectedRequired.length < requiredServices.length) {
+        toast({
+          title: "Missing Required Services",
+          description: "Please connect all required services before proceeding.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Verify token and get user profile
+      const { apiService } = await import('../services/api');
+      const userProfile = await apiService.getCurrentUser();
+      const apiKeys = await apiService.getApiKeys();
+      
+      console.log('Proceeding to app with user:', userProfile);
+      
+      // Call the parent callback with authentication data
+      onAuthenticated({
+        token: descopeToken!,
+        services: apiKeys.apiKeys || {},
+        user: userProfile.user
       });
       
-      if (response.ok) {
-        const apiTokens = await response.json();
-        onAuthenticated(descopeToken, apiTokens);
-        setAuthStep('ready');
-      } else {
-        throw new Error('Failed to fetch API tokens');
-      }
     } catch (error) {
-      console.error('Error fetching tokens:', error);
+      console.error('Failed to proceed to app:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to retrieve API tokens. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to initialize application. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -270,25 +282,25 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
 
             <div className="space-y-3">
               {connectedServices.map(service => (
-                <div
-                  key={service.name}
-                  className={`p-4 rounded-lg border ${
-                    service.connected 
-                      ? 'bg-success/10 border-success/30' 
-                      : service.required
-                      ? 'bg-warning/10 border-warning/30'
-                      : 'bg-surface/50 border-border/30'
-                  }`}
-                >
+                 <div
+                   key={service.name}
+                   className={`p-4 rounded-lg border ${
+                     service.connected === 'connected'
+                       ? 'bg-success/10 border-success/30' 
+                       : service.required
+                       ? 'bg-warning/10 border-warning/30'
+                       : 'bg-surface/50 border-border/30'
+                   }`}
+                 >
                   <div className="space-y-3">
-                    <div className="flex items-start space-x-3">
-                      {service.connected || service.keyValue === 'PUBLIC' ? (
-                        <CheckCircle className="w-5 h-5 text-success mt-0.5" />
-                      ) : (
-                        <Key className={`w-5 h-5 mt-0.5 ${
-                          service.required ? 'text-warning' : 'text-muted-foreground'
-                        }`} />
-                      )}
+                     <div className="flex items-start space-x-3">
+                       {service.connected === 'connected' ? (
+                         <CheckCircle className="w-5 h-5 text-success mt-0.5" />
+                       ) : (
+                         <Key className={`w-5 h-5 mt-0.5 ${
+                           service.required ? 'text-warning' : 'text-muted-foreground'
+                         }`} />
+                       )}
                       <div className="flex-1">
                         <div className="font-medium">
                           {service.name}
@@ -354,10 +366,10 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
                 <Save className="w-4 h-4 mr-2" />
                 Save Keys
               </Button>
-              <Button
-                onClick={() => proceedToApp()}
-                disabled={!connectedServices.some(s => s.required && (s.connected || s.keyValue === 'PUBLIC'))}
-              >
+               <Button
+                 onClick={() => proceedToApp()}
+                 disabled={!connectedServices.some(s => s.required && s.connected === 'connected')}
+               >
                 Continue to Dashboard
               </Button>
             </div>

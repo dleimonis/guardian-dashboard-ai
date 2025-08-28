@@ -145,24 +145,40 @@ class ApiService {
     return response.data;
   }
 
-  // Authentication (if using Descope)
-  async login(credentials: { email: string; password: string }) {
-    // This would integrate with Descope
-    const response = await this.client.post('/api/auth/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token);
-    }
+  // Authentication (Descope integration)
+  async verifyToken(token: string) {
+    const response = await this.client.post('/api/auth/verify', { token });
+    return response.data;
+  }
+
+  async getCurrentUser() {
+    const response = await this.client.get('/api/auth/profile');
+    return response.data;
+  }
+
+  async saveApiKeys(apiKeys: Record<string, string>) {
+    const response = await this.client.post('/api/auth/api-keys', { apiKeys });
+    return response.data;
+  }
+
+  async getApiKeys() {
+    const response = await this.client.get('/api/auth/api-keys');
+    return response.data;
+  }
+
+  async revokeService(service: string) {
+    const response = await this.client.delete(`/api/auth/api-keys/${service}`);
+    return response.data;
+  }
+
+  async getServiceStatus(service: string) {
+    const response = await this.client.get(`/api/auth/services/${service}/status`);
     return response.data;
   }
 
   async logout() {
     localStorage.removeItem('auth_token');
-    // Call logout endpoint if needed
-  }
-
-  async getCurrentUser() {
-    const response = await this.client.get('/api/auth/me');
-    return response.data;
+    // Clear any other auth-related data
   }
 }
 

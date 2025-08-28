@@ -15,34 +15,36 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [apiTokens, setApiTokens] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
 
   // Check for existing session on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('descope_token');
+    const storedToken = localStorage.getItem('auth_token');
     if (storedToken) {
-      // Verify token is still valid
-      fetch('/api/auth/verify', {
-        headers: { 'Authorization': `Bearer ${storedToken}` }
-      })
-      .then(res => {
-        if (res.ok) {
-          setAuthToken(storedToken);
-          setIsAuthenticated(true);
-        } else {
-          localStorage.removeItem('descope_token');
-        }
-      })
-      .catch(() => {
-        localStorage.removeItem('descope_token');
+      // Verify token is still valid using the API service
+      import('./services/api').then(({ apiService }) => {
+        apiService.verifyToken(storedToken)
+          .then(response => {
+            if (response.success) {
+              setAuthToken(storedToken);
+              setIsAuthenticated(true);
+            } else {
+              localStorage.removeItem('auth_token');
+            }
+          })
+          .catch(() => {
+            localStorage.removeItem('auth_token');
+          });
       });
     }
   }, []);
 
-  const handleAuthentication = (token: string, tokens: any) => {
-    setAuthToken(token);
-    setApiTokens(tokens);
+  const handleAuthentication = (data: { token: string; services: Record<string, string>; user: any }) => {
+    setAuthToken(data.token);
+    setApiTokens(data.services);
+    setUser(data.user);
     setIsAuthenticated(true);
-    localStorage.setItem('descope_token', token);
+    localStorage.setItem('auth_token', data.token);
   };
 
   // If not authenticated, show Descope login
