@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: guardian-dashboard-backend
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DESCOPE_PROJECT_ID
+        sync: false
+      - key: DESCOPE_MANAGEMENT_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+    healthCheckPath: /health
+    autoDeploy: true
