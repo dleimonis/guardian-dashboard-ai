@@ -81,24 +81,54 @@ export function createAuthRoutes(authService: DescopeAuthService, logger: Logger
 
   /**
    * POST /api/auth/api-keys
-   * Store user API keys in Descope
+   * Store user API keys (Demo mode accepts without validation for hackathon)
    */
-  router.post('/api-keys', authService.validateToken.bind(authService), async (req, res) => {
+  router.post('/api-keys', async (req, res) => {
     try {
-      const user = (req as any).user;
       const { apiKeys } = req.body;
 
       if (!apiKeys || typeof apiKeys !== 'object') {
         return res.status(400).json({ error: 'API keys object is required' });
       }
 
-      await authService.saveApiKeys(user.sub, apiKeys);
+      // In demo mode for hackathon, just acknowledge the save
+      if (!process.env.DESCOPE_MANAGEMENT_KEY) {
+        logger.info('Demo mode: API keys simulated save', Object.keys(apiKeys));
+        return res.json({
+          success: true,
+          message: 'API keys saved successfully (demo mode)',
+          savedKeys: Object.keys(apiKeys),
+          demoMode: true
+        });
+      }
+
+      // Production mode with actual Descope
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No token provided' });
+      }
+
+      const token = authHeader.substring(7);
+      const mockReq = { headers: { authorization: `Bearer ${token}` } } as any;
+      const mockRes = { status: (code: number) => ({ json: (data: any) => ({ statusCode: code, data }) }) } as any;
+      let user: any = null;
+      const mockNext = (error?: any) => {
+        if (error) throw error;
+        user = (mockReq as any).user;
+      };
+
+      await authService.validateToken(mockReq, mockRes, mockNext);
       
-      res.json({
-        success: true,
-        message: 'API keys saved successfully',
-        savedKeys: Object.keys(apiKeys)
-      });
+      if (user) {
+        await authService.saveApiKeys(user.sub, apiKeys);
+        res.json({
+          success: true,
+          message: 'API keys saved successfully',
+          savedKeys: Object.keys(apiKeys)
+        });
+      } else {
+        res.status(401).json({ error: 'Invalid token' });
+      }
     } catch (error) {
       logger.error('API keys save error:', error);
       res.status(500).json({ error: 'Failed to save API keys' });
@@ -107,18 +137,47 @@ export function createAuthRoutes(authService: DescopeAuthService, logger: Logger
 
   /**
    * GET /api/auth/api-keys
-   * Get user API keys from Descope
+   * Get user API keys (Demo mode returns empty for hackathon)
    */
-  router.get('/api-keys', authService.validateToken.bind(authService), async (req, res) => {
+  router.get('/api-keys', async (req, res) => {
     try {
-      const user = (req as any).user;
-      const tokens = await authService.getAllTokens(user.sub);
+      // In demo mode for hackathon, return empty keys
+      if (!process.env.DESCOPE_MANAGEMENT_KEY) {
+        return res.json({
+          success: true,
+          apiKeys: {},
+          connectedServices: [],
+          demoMode: true
+        });
+      }
+
+      // Production mode with actual Descope
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No token provided' });
+      }
+
+      const token = authHeader.substring(7);
+      const mockReq = { headers: { authorization: `Bearer ${token}` } } as any;
+      const mockRes = { status: (code: number) => ({ json: (data: any) => ({ statusCode: code, data }) }) } as any;
+      let user: any = null;
+      const mockNext = (error?: any) => {
+        if (error) throw error;
+        user = (mockReq as any).user;
+      };
+
+      await authService.validateToken(mockReq, mockRes, mockNext);
       
-      res.json({
-        success: true,
-        apiKeys: tokens,
-        connectedServices: Object.keys(tokens)
-      });
+      if (user) {
+        const tokens = await authService.getAllTokens(user.sub);
+        res.json({
+          success: true,
+          apiKeys: tokens,
+          connectedServices: Object.keys(tokens)
+        });
+      } else {
+        res.status(401).json({ error: 'Invalid token' });
+      }
     } catch (error) {
       logger.error('API keys fetch error:', error);
       res.status(500).json({ error: 'Failed to fetch API keys' });
