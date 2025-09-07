@@ -223,26 +223,55 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
         return;
       }
 
-      // Verify token and get user profile
-      const { apiService } = await import('../services/api');
-      const userProfile = await apiService.getCurrentUser();
-      const apiKeys = await apiService.getApiKeys();
-      
-      console.log('Proceeding to app with user:', userProfile);
-      
-      // Call the parent callback with authentication data
-      onAuthenticated({
-        token: descopeToken!,
-        services: apiKeys.apiKeys || {},
-        user: userProfile.user
-      });
+      // Try to verify token and get user profile
+      try {
+        const { apiService } = await import('../services/api');
+        const userProfile = await apiService.getCurrentUser();
+        const apiKeys = await apiService.getApiKeys();
+        
+        console.log('Proceeding to app with user:', userProfile);
+        
+        // Call the parent callback with authentication data
+        onAuthenticated({
+          token: descopeToken!,
+          services: apiKeys.apiKeys || {},
+          user: userProfile.user
+        });
+      } catch (apiError) {
+        // Fallback to demo mode if API fails
+        console.log('API unavailable, proceeding in demo mode');
+        toast({
+          title: "Demo Mode Active",
+          description: "Backend unavailable - using simulated data",
+        });
+        
+        onAuthenticated({
+          token: descopeToken || 'demo_token_' + Date.now(),
+          services: {},
+          user: { 
+            email: 'demo@guardian.ai', 
+            name: 'Demo User',
+            sub: 'demo_user_' + Date.now()
+          }
+        });
+      }
       
     } catch (error) {
       console.error('Failed to proceed to app:', error);
+      // Even on complete failure, proceed in demo mode
       toast({
-        title: "Error",
-        description: "Failed to initialize application. Please try again.",
-        variant: "destructive",
+        title: "Demo Mode",
+        description: "Proceeding with demo mode for testing",
+      });
+      
+      onAuthenticated({
+        token: 'demo_token_' + Date.now(),
+        services: {},
+        user: { 
+          email: 'demo@guardian.ai', 
+          name: 'Demo User',
+          sub: 'demo_user_' + Date.now()
+        }
       });
     }
   };
@@ -371,6 +400,33 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
                  disabled={!connectedServices.some(s => s.required && s.connected === 'connected')}
                >
                 Continue to Dashboard
+              </Button>
+            </div>
+
+            {/* Demo Mode Button for Hackathon */}
+            <div className="pt-2 border-t">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  toast({
+                    title: "Demo Mode",
+                    description: "Proceeding without API keys - perfect for testing!",
+                  });
+                  // Skip directly to app with demo credentials
+                  onAuthenticated({
+                    token: descopeToken || 'demo_token_' + Date.now(),
+                    services: {},
+                    user: { 
+                      email: 'demo@guardian.ai', 
+                      name: 'Demo User',
+                      sub: 'demo_user_' + Date.now()
+                    }
+                  });
+                }}
+                className="w-full text-muted-foreground hover:text-foreground"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Skip to Demo Mode (For Hackathon Testing)
               </Button>
             </div>
           </div>

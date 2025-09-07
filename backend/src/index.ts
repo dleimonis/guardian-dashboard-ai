@@ -48,10 +48,15 @@ const corsOptions = {
       'http://localhost:5173',
       'http://localhost:5174', 
       'http://localhost:8080',
+      'http://localhost:8081',
+      'http://localhost:8082',
+      'http://localhost:8083',
       process.env.FRONTEND_URL,
       // Add Lovable domains
       /https:\/\/.*\.lovable\.app$/,
       /https:\/\/.*\.lovableproject\.com$/,
+      // Allow all localhost ports for development (8080-8090)
+      /http:\/\/localhost:80[8-9][0-9]/,
     ];
     
     // Allow requests with no origin (mobile apps, Postman, etc.)
@@ -68,6 +73,7 @@ const corsOptions = {
     if (isAllowed) {
       callback(null, true);
     } else {
+      console.warn('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
