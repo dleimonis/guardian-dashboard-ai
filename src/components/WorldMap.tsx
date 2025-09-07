@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Tooltip, LayersControl } from 'react-leaflet';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, AlertTriangle, Flame, Activity, CloudRain } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MapPin, AlertTriangle, Flame, Activity, CloudRain, Maximize2, Minimize2 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -26,6 +27,7 @@ L.Icon.Default.mergeOptions({
 
 const WorldMap = () => {
   const [selectedEmergency, setSelectedEmergency] = useState<Emergency | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Mock emergency data with real coordinates
   const emergencies: Emergency[] = [
@@ -138,37 +140,78 @@ const WorldMap = () => {
         background-color: hsl(220 15% 10%);
         font-family: inherit;
       }
-      .leaflet-tile-pane {
+      .leaflet-tile-pane.dark-mode {
         filter: brightness(0.8) contrast(1.2) saturate(0.8);
       }
       .leaflet-popup-content-wrapper {
-        background: hsl(220 15% 12% / 0.95);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
-        border: 1px solid hsl(220 15% 20%);
+        border: 1px solid rgba(0, 0, 0, 0.1);
         border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      }
+      .dark .leaflet-popup-content-wrapper {
+        background: hsl(220 15% 12% / 0.95);
+        border: 1px solid hsl(220 15% 20%);
         box-shadow: 0 8px 32px hsl(220 15% 0% / 0.3);
       }
       .leaflet-popup-content {
-        color: white;
+        color: #333;
         margin: 0;
         padding: 0;
       }
+      .dark .leaflet-popup-content {
+        color: white;
+      }
       .leaflet-popup-tip {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+      .dark .leaflet-popup-tip {
         background: hsl(220 15% 12% / 0.95);
         border: 1px solid hsl(220 15% 20%);
       }
       .leaflet-control-zoom {
-        background: hsl(220 15% 12% / 0.95);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      }
+      .dark .leaflet-control-zoom {
+        background: hsl(220 15% 12% / 0.95);
         border: 1px solid hsl(220 15% 20%) !important;
       }
       .leaflet-control-zoom a {
         background: transparent;
+        color: #333;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      }
+      .dark .leaflet-control-zoom a {
         color: white;
         border-bottom: 1px solid hsl(220 15% 20%);
       }
       .leaflet-control-zoom a:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+      .dark .leaflet-control-zoom a:hover {
         background: hsl(220 15% 18%);
+      }
+      .leaflet-control-layers {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        border-radius: 8px;
+      }
+      .dark .leaflet-control-layers {
+        background: hsl(220 15% 12% / 0.95);
+        border: 1px solid hsl(220 15% 20%) !important;
+      }
+      .leaflet-control-layers-toggle {
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7z"/></svg>');
+        background-size: 24px 24px;
+        background-position: center;
+      }
+      .dark .leaflet-control-layers-toggle {
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7z"/></svg>');
       }
       @keyframes emergencyPulse {
         0%, 100% { transform: scale(1); opacity: 1; }
@@ -184,29 +227,66 @@ const WorldMap = () => {
     };
   }, []);
 
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   return (
-    <Card className="relative p-6 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-foreground">Global Emergency Monitor</h2>
-        <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground">
-          {emergencies.length} Active
-        </Badge>
+    <Card className={`relative ${isFullscreen ? 'fixed inset-0 z-50' : 'p-6'} bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass h-full transition-all duration-300`}>
+      <div className={`flex items-center justify-between ${isFullscreen ? 'absolute top-4 left-4 right-4 z-[1001]' : 'mb-4'}`}>
+        <h2 className="text-lg font-semibold text-foreground bg-background/80 backdrop-blur-sm px-3 py-1 rounded-lg">Global Emergency Monitor</h2>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground">
+            {emergencies.length} Active
+          </Badge>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleFullscreen}
+            className="bg-background/80 backdrop-blur-sm"
+          >
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
 
-      <div className="relative w-full h-full min-h-[400px] rounded-lg overflow-hidden">
+      <div className={`relative w-full ${isFullscreen ? 'h-full' : 'h-full min-h-[400px]'} rounded-lg overflow-hidden`}>
         <MapContainer
           center={[20, 0]}
-          zoom={2}
+          zoom={isFullscreen ? 3 : 2}
           style={{ height: '100%', width: '100%' }}
           className="rounded-lg"
           scrollWheelZoom={true}
           zoomControl={true}
         >
-          {/* Dark themed tile layer */}
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          />
+          {/* Layer controls for different map styles */}
+          <LayersControl position="topright">
+            <LayersControl.BaseLayer checked name="Street Map">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Satellite">
+              <TileLayer
+                attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Dark Mode">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                className="dark-mode"
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Terrain">
+              <TileLayer
+                attribution='&copy; <a href="https://www.opentopomap.org">OpenTopoMap</a>'
+                url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+              />
+            </LayersControl.BaseLayer>
+          </LayersControl>
 
           {/* Emergency markers */}
           {emergencies.map((emergency) => (
@@ -223,17 +303,17 @@ const WorldMap = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-2">
                       <MapPin className="w-4 h-4 text-primary" />
-                      <h3 className="font-semibold text-white">{emergency.title}</h3>
+                      <h3 className="font-semibold">{emergency.title}</h3>
                     </div>
                   </div>
                   
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Type:</span>
-                      <span className="text-white">{emergency.type}</span>
+                      <span className="text-gray-500 dark:text-gray-400">Type:</span>
+                      <span className="font-medium">{emergency.type}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Severity:</span>
+                      <span className="text-gray-500 dark:text-gray-400">Severity:</span>
                       <Badge 
                         variant="secondary"
                         className="text-xs capitalize"
@@ -247,18 +327,18 @@ const WorldMap = () => {
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Affected:</span>
-                      <span className="text-white">{emergency.affectedPeople.toLocaleString()} people</span>
+                      <span className="text-gray-500 dark:text-gray-400">Affected:</span>
+                      <span className="font-medium">{emergency.affectedPeople.toLocaleString()} people</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Coordinates:</span>
-                      <span className="text-white font-mono text-xs">
+                      <span className="text-gray-500 dark:text-gray-400">Coordinates:</span>
+                      <span className="font-mono text-xs">
                         {emergency.lat.toFixed(4)}, {emergency.lng.toFixed(4)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-gray-700">
+                  <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                     <button className="w-full px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors text-sm font-medium">
                       View Details
                     </button>
@@ -269,7 +349,7 @@ const WorldMap = () => {
               <Tooltip direction="top" offset={[0, -10]} opacity={0.9}>
                 <div className="text-xs">
                   <div className="font-semibold">{emergency.title}</div>
-                  <div className="text-gray-300">Click for details</div>
+                  <div className="text-gray-600 dark:text-gray-300">Click for details</div>
                 </div>
               </Tooltip>
             </Marker>
@@ -293,20 +373,20 @@ const WorldMap = () => {
         </MapContainer>
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-gradient-surface backdrop-blur-glass border border-border/50 rounded-lg p-3 shadow-glass z-[1000]">
-          <h4 className="text-xs font-semibold text-foreground mb-2">Severity Levels</h4>
+        <div className={`absolute ${isFullscreen ? 'bottom-8' : 'bottom-4'} left-4 bg-white/90 dark:bg-gradient-surface backdrop-blur-glass border border-gray-200 dark:border-border/50 rounded-lg p-3 shadow-lg dark:shadow-glass z-[1000]`}>
+          <h4 className="text-xs font-semibold text-gray-800 dark:text-foreground mb-2">Severity Levels</h4>
           <div className="space-y-1 text-xs">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded-full bg-critical"></div>
-              <span className="text-muted-foreground">Critical</span>
+              <span className="text-gray-600 dark:text-muted-foreground">Critical</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded-full bg-warning"></div>
-              <span className="text-muted-foreground">Warning</span>
+              <span className="text-gray-600 dark:text-muted-foreground">Warning</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded-full bg-success"></div>
-              <span className="text-muted-foreground">Watch</span>
+              <span className="text-gray-600 dark:text-muted-foreground">Watch</span>
             </div>
           </div>
         </div>

@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Clock, Globe } from 'lucide-react';
+import { Clock, Globe, Sun, Moon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/contexts/ThemeContext';
 import HeartbeatLine from '@/components/HeartbeatLine';
 import SoundControlPanel from '@/components/SoundControlPanel';
 
 const Header = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [timezone, setTimezone] = useState('America/New_York');
+  const { theme, toggleTheme } = useTheme();
 
   const timezones = [
     { value: 'America/New_York', label: 'Eastern Time' },
@@ -104,6 +107,21 @@ const Header = () => {
             </SelectContent>
           </Select>
         </div>
+        
+        {/* Theme Toggle */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleTheme}
+          className="bg-surface-glass border-border/50"
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
+          {theme === 'light' ? (
+            <Moon className="h-4 w-4" />
+          ) : (
+            <Sun className="h-4 w-4" />
+          )}
+        </Button>
       </div>
     </header>
   );

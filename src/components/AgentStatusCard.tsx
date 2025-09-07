@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Eye, Activity, CloudRain, Waves } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Eye, Activity, CloudRain, Waves, Info, Flame } from 'lucide-react';
 
 export type AgentStatus = 'online' | 'warning' | 'offline' | 'error';
 
@@ -31,7 +32,7 @@ const AgentStatusCard = ({ name, description, status, lastUpdate, type }: AgentS
   const getIcon = (type: string) => {
     switch (type) {
       case 'fire':
-        return <Eye className="w-5 h-5" />;
+        return <Flame className="w-5 h-5" />;
       case 'earthquake':
         return <Activity className="w-5 h-5" />;
       case 'weather':
@@ -40,6 +41,21 @@ const AgentStatusCard = ({ name, description, status, lastUpdate, type }: AgentS
         return <Waves className="w-5 h-5" />;
       default:
         return <Eye className="w-5 h-5" />;
+    }
+  };
+
+  const getAgentInfo = (type: string) => {
+    switch (type) {
+      case 'fire':
+        return 'Monitors NASA FIRMS satellite data for active fire detection';
+      case 'earthquake':
+        return 'Tracks USGS seismic activity and earthquake reports worldwide';
+      case 'weather':
+        return 'Analyzes NOAA weather patterns for severe storm detection';
+      case 'flood':
+        return 'Monitors water levels and flood risk from multiple sources';
+      default:
+        return 'AI-powered monitoring agent for disaster detection';
     }
   };
 
@@ -78,23 +94,35 @@ const AgentStatusCard = ({ name, description, status, lastUpdate, type }: AgentS
   const statusIconColor = getStatusIconColor(status);
 
   return (
-    <Card className={`p-4 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass hover:shadow-glow-secondary transition-all duration-300 animate-slide-up ${status === 'online' ? 'animate-agent-pulse' : ''}`}>
+    <Card className={`p-4 bg-white/5 dark:bg-gradient-surface backdrop-blur-sm border-gray-200 dark:border-border/50 shadow-sm dark:shadow-glass hover:shadow-md dark:hover:shadow-glow-secondary transition-all duration-300 ${status === 'online' ? 'animate-agent-pulse' : ''}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-lg ${statusIconColor}`}>
+          <div className={`p-2.5 rounded-xl ${statusIconColor} transition-colors duration-200`}>
             {getIcon(type)}
           </div>
-          <div>
-            <h3 className="font-semibold text-foreground text-sm">{name}</h3>
-            <p className="text-xs text-muted-foreground">{description}</p>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-gray-900 dark:text-foreground text-sm">{name}</h3>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-3 h-3 text-gray-400 dark:text-muted-foreground hover:text-gray-600 dark:hover:text-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs">{getAgentInfo(type)}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <p className="text-xs text-gray-600 dark:text-muted-foreground mt-0.5">{description}</p>
           </div>
         </div>
         
-        <div className="flex flex-col items-end space-y-1">
-          <div className={`w-3 h-3 rounded-full ${statusDotColor} shadow-glow-secondary animate-pulse`} />
+        <div className="flex flex-col items-end space-y-2">
+          <div className={`w-2.5 h-2.5 rounded-full ${statusDotColor} ${status === 'online' ? 'animate-pulse shadow-lg' : ''}`} />
           <Badge 
             variant="secondary" 
-            className={`text-xs ${statusColor} capitalize`}
+            className={`text-xs font-medium ${statusColor} capitalize`}
           >
             {status}
           </Badge>
@@ -102,8 +130,8 @@ const AgentStatusCard = ({ name, description, status, lastUpdate, type }: AgentS
       </div>
       
       {lastUpdate && (
-        <div className="text-xs text-muted-foreground">
-          Last update: {lastUpdate}
+        <div className="text-xs text-gray-500 dark:text-muted-foreground border-t border-gray-100 dark:border-border/30 pt-2 mt-2">
+          <span className="font-medium">Last check:</span> {lastUpdate}
         </div>
       )}
     </Card>

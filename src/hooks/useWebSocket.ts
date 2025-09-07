@@ -31,6 +31,8 @@ export const useWebSocket = ({
   const [reconnectCount, setReconnectCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const hasShownDisconnectToast = useRef(false);
+  const isFirstConnection = useRef(true);
   const { toast } = useToast();
 
   const connect = useCallback(() => {
@@ -47,6 +49,7 @@ export const useWebSocket = ({
         console.log('WebSocket connected');
         setIsConnected(true);
         setReconnectCount(0);
+        hasShownDisconnectToast.current = false;
         onConnect?.();
         
         // Send initial subscription message
@@ -55,11 +58,15 @@ export const useWebSocket = ({
           channels: ['disasters', 'alerts', 'agents', 'statistics'],
         }));
 
-        toast({
-          title: 'Connected',
-          description: 'Real-time updates activated',
-          duration: 3000,
-        });
+        // Only show toast on first connection or after complete failure
+        if (isFirstConnection.current || reconnectCount >= reconnectAttempts - 1) {
+          toast({
+            title: 'Connected',
+            description: 'Real-time updates activated',
+            duration: 3000,
+          });
+          isFirstConnection.current = false;
+        }
       };
 
       ws.onmessage = (event) => {
@@ -86,33 +93,45 @@ export const useWebSocket = ({
 
         // Attempt to reconnect
         if (reconnectCount < reconnectAttempts) {
-          toast({
-            title: 'Disconnected',
-            description: `Reconnecting... (${reconnectCount + 1}/${reconnectAttempts})`,
-            duration: 2000,
-          });
+          // Only show toast on first disconnect or last attempt
+          if (!hasShownDisconnectToast.current) {
+            console.log(`Reconnecting silently... (${reconnectCount + 1}/${reconnectAttempts})`);
+          }
 
+          // Use exponential backoff for reconnection
+          const backoffDelay = Math.min(reconnectInterval * Math.pow(1.5, reconnectCount), 30000);
+          
           reconnectTimeoutRef.current = setTimeout(() => {
             setReconnectCount((prev) => prev + 1);
             connect();
-          }, reconnectInterval);
+          }, backoffDelay);
         } else {
-          toast({
-            title: 'Connection Lost',
-            description: 'Unable to connect to real-time updates',
-            variant: 'destructive',
-          });
+          // Only show failure toast once
+          if (!hasShownDisconnectToast.current) {
+            toast({
+              title: 'Connection Lost',
+              description: 'Running in offline mode - data may not be real-time',
+              variant: 'destructive',
+              duration: 5000,
+            });
+            hasShownDisconnectToast.current = true;
+          }
         }
       };
 
       wsRef.current = ws;
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
-      toast({
-        title: 'Connection Error',
-        description: 'Failed to establish real-time connection',
-        variant: 'destructive',
-      });
+      // Only show error toast on first attempt
+      if (isFirstConnection.current) {
+        toast({
+          title: 'Connection Error',
+          description: 'Running in offline mode - demo data will be used',
+          variant: 'destructive',
+          duration: 5000,
+        });
+        isFirstConnection.current = false;
+      }
     }
   }, [url, reconnectCount, reconnectAttempts, reconnectInterval, onConnect, onDisconnect, onError, onMessage, toast]);
 

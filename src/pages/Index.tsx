@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useEmergency } from '@/contexts/EmergencyContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Header from '@/components/Header';
@@ -8,10 +8,16 @@ import StatisticsBar from '@/components/StatisticsBar';
 import WorldMap from '@/components/WorldMap';
 import EmergencyButton from '@/components/EmergencyButton';
 import LiveTicker from '@/components/LiveTicker';
+import InfoModal from '@/components/InfoModal';
+import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronUp, Minimize2, Maximize2 } from 'lucide-react';
 
 const Index = () => {
   console.log('Index component rendering...');
   const [acknowledgedAlerts, setAcknowledgedAlerts] = useState<Set<string>>(new Set());
+  const [isAgentsCollapsed, setIsAgentsCollapsed] = useState(() => {
+    return localStorage.getItem('agentsCollapsed') === 'true';
+  });
   const { alerts: contextAlerts, agentStatuses, isConnected, acknowledgeAlert: contextAcknowledgeAlert } = useEmergency();
 
   // Convert agent statuses to display format
@@ -68,7 +74,16 @@ const Index = () => {
   };
 
   const activeEmergencies = alerts.filter(alert => alert.severity === 'critical').length;
-  const systemStatus = !isConnected ? 'offline' : agents.some(agent => agent.status === 'warning') ? 'degraded' : 'online';
+  const systemStatus = !isConnected ? 'demo' : agents.some(agent => agent.status === 'warning') ? 'degraded' : 'online';
+
+  // Save agent collapse state
+  useEffect(() => {
+    localStorage.setItem('agentsCollapsed', String(isAgentsCollapsed));
+  }, [isAgentsCollapsed]);
+
+  const toggleAgentsCollapse = () => {
+    setIsAgentsCollapsed(!isAgentsCollapsed);
+  };
 
   console.log('Index component returning JSX...');
   
@@ -80,12 +95,23 @@ const Index = () => {
       
       <div className="flex h-[calc(100vh-128px)]">
         {/* Left Sidebar - Agent Status */}
-        <div className="w-80 p-6 space-y-4 overflow-y-auto">
-          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-            <div className="w-2 h-2 bg-success rounded-full mr-3 animate-pulse" />
-            Monitoring Agents
-          </h2>
-          {agents.map((agent, index) => (
+        <div className={`${isAgentsCollapsed ? 'w-16' : 'w-80'} transition-all duration-300 p-6 space-y-4 overflow-y-auto border-r border-border/50`}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className={`text-lg font-semibold text-foreground flex items-center ${isAgentsCollapsed ? 'hidden' : ''}`}>
+              <div className={`w-2 h-2 ${isConnected ? 'bg-success' : 'bg-warning'} rounded-full mr-3 animate-pulse`} />
+              Monitoring Agents
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleAgentsCollapse}
+              className="ml-auto"
+              title={isAgentsCollapsed ? 'Expand agents' : 'Collapse agents'}
+            >
+              {isAgentsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </Button>
+          </div>
+          {!isAgentsCollapsed && agents.map((agent, index) => (
             <AgentStatusCard
               key={agent.name}
               name={agent.name}
@@ -95,6 +121,29 @@ const Index = () => {
               lastUpdate={agent.lastUpdate}
             />
           ))}
+          {isAgentsCollapsed && (
+            <div className="space-y-2">
+              {agents.map((agent) => (
+                <div
+                  key={agent.name}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    agent.status === 'online' ? 'bg-success/20' :
+                    agent.status === 'warning' ? 'bg-warning/20' :
+                    agent.status === 'error' ? 'bg-destructive/20' :
+                    'bg-muted/20'
+                  }`}
+                  title={`${agent.name}: ${agent.status}`}
+                >
+                  <div className={`w-3 h-3 rounded-full ${
+                    agent.status === 'online' ? 'bg-success' :
+                    agent.status === 'warning' ? 'bg-warning' :
+                    agent.status === 'error' ? 'bg-destructive' :
+                    'bg-muted'
+                  } ${agent.status === 'online' ? 'animate-pulse' : ''}`} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Main Content Area */}
@@ -104,7 +153,7 @@ const Index = () => {
               activeEmergencies={activeEmergencies}
               peopleWarned={1247893}
               responseTime={18}
-              systemStatus={systemStatus as 'online' | 'degraded' | 'offline'}
+              systemStatus={systemStatus === 'demo' ? 'online' : systemStatus as 'online' | 'degraded' | 'offline'}
             />
           </ErrorBoundary>
           <ErrorBoundary fallback={<div className="p-4 text-warning">Map failed to load</div>}>
@@ -149,6 +198,9 @@ const Index = () => {
       <ErrorBoundary fallback={null}>
         <EmergencyButton />
       </ErrorBoundary>
+
+      {/* Info Modal */}
+      <InfoModal />
     </div>
   );
 };

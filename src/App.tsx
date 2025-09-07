@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { EmergencyProvider } from "@/contexts/EmergencyContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import DescopeAuth from "@/components/DescopeAuth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -51,11 +52,13 @@ const App = () => {
   if (!isAuthenticated) {
     return (
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <DescopeAuth onAuthenticated={handleAuthentication} />
-        </TooltipProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <DescopeAuth onAuthenticated={handleAuthentication} />
+          </TooltipProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     );
   }
@@ -63,19 +66,21 @@ const App = () => {
   // Authenticated - show main app
   return (
     <QueryClientProvider client={queryClient}>
-      <EmergencyProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </EmergencyProvider>
+      <ThemeProvider>
+        <EmergencyProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </EmergencyProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
