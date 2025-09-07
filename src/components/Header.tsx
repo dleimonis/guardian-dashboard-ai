@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Clock, Globe, Sun, Moon, Menu, Settings } from 'lucide-react';
+import { Clock, Globe, Sun, Moon, Menu, Settings, User, Shield } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from '@/contexts/UserContext';
 import HeartbeatLine from '@/components/HeartbeatLine';
 import SoundControlPanel from '@/components/SoundControlPanel';
 import VoiceAlerts from '@/components/VoiceAlerts';
@@ -23,6 +25,8 @@ const Header = () => {
   const [timezone, setTimezone] = useState('America/New_York');
   const { theme, toggleTheme } = useTheme();
   const { isMobile, isTablet } = useIsMobile();
+  const navigate = useNavigate();
+  const { user } = useUser();
 
   const timezones = [
     { value: 'America/New_York', label: 'Eastern Time' },
@@ -124,6 +128,16 @@ const Header = () => {
               
               <DropdownMenuSeparator />
               
+              <DropdownMenuItem onClick={() => navigate('/profile')}>
+                <User className="h-4 w-4 mr-2" /> User Profile
+              </DropdownMenuItem>
+              
+              {user?.role === 'admin' && (
+                <DropdownMenuItem onClick={() => navigate('/admin')}>
+                  <Shield className="h-4 w-4 mr-2" /> Admin Dashboard
+                </DropdownMenuItem>
+              )}
+              
               <DropdownMenuItem onClick={toggleTheme}>
                 {theme === 'light' ? (
                   <><Moon className="h-4 w-4 mr-2" /> Dark Mode</>
@@ -167,6 +181,30 @@ const Header = () => {
               </SelectContent>
             </Select>
           </div>
+          
+          {/* Admin Dashboard Button */}
+          {user?.role === 'admin' && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate('/admin')}
+              className="bg-surface-glass border-border/50"
+              title="Admin Dashboard"
+            >
+              <Shield className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {/* User Profile Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate('/profile')}
+            className="bg-surface-glass border-border/50"
+            title="User Profile"
+          >
+            <User className="h-4 w-4" />
+          </Button>
           
           {/* Theme Toggle */}
           <Button

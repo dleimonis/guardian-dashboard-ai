@@ -10,6 +10,7 @@ import { agentRoutes, setOrchestrator as setAgentOrchestrator } from './routes/a
 import { createAuthRoutes } from './routes/auth';
 import communityRoutes from './routes/community';
 import { analyticsRoutes, setOrchestrator as setAnalyticsOrchestrator, recordDisasterEvent } from './routes/analytics';
+import { userRoutes } from './routes/users';
 import { WebSocketManager } from './services/websocket';
 import { AgentOrchestrator } from './agents/orchestrator';
 import { DisasterMonitoringService } from './services/monitoring';
@@ -103,6 +104,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/users', userRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

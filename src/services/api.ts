@@ -180,6 +180,95 @@ class ApiService {
     localStorage.removeItem('auth_token');
     // Clear any other auth-related data
   }
+
+  // User API
+  async getUserProfile() {
+    const response = await this.client.get('/api/users/profile');
+    return response.data;
+  }
+
+  async updateUserProfile(updates: any) {
+    const response = await this.client.put('/api/users/profile', updates);
+    return response.data;
+  }
+
+  async getUserLocations() {
+    const response = await this.client.get('/api/users/locations');
+    return response.data;
+  }
+
+  async addUserLocation(location: any) {
+    const response = await this.client.post('/api/users/locations', location);
+    return response.data;
+  }
+
+  async updateUserLocation(id: string, updates: any) {
+    const response = await this.client.put(`/api/users/locations/${id}`, updates);
+    return response.data;
+  }
+
+  async deleteUserLocation(id: string) {
+    const response = await this.client.delete(`/api/users/locations/${id}`);
+    return response.data;
+  }
+
+  async getUserPreferences() {
+    const response = await this.client.get('/api/users/preferences');
+    return response.data;
+  }
+
+  async updateUserPreferences(preferences: any) {
+    const response = await this.client.put('/api/users/preferences', preferences);
+    return response.data;
+  }
+
+  async getUserAlertZones() {
+    const response = await this.client.get('/api/users/alert-zones');
+    return response.data;
+  }
+
+  async createAlertZone(zone: any) {
+    const response = await this.client.post('/api/users/alert-zones', zone);
+    return response.data;
+  }
+
+  async updateAlertZone(id: string, updates: any) {
+    const response = await this.client.put(`/api/users/alert-zones/${id}`, updates);
+    return response.data;
+  }
+
+  async deleteAlertZone(id: string) {
+    const response = await this.client.delete(`/api/users/alert-zones/${id}`);
+    return response.data;
+  }
+
+  async testAlertZone(id: string) {
+    const response = await this.client.post(`/api/users/alert-zones/${id}/test`);
+    return response.data;
+  }
+
+  async getUserAlertHistory(limit?: number) {
+    const response = await this.client.get('/api/users/alerts/history', {
+      params: { limit },
+    });
+    return response.data;
+  }
+
+  async acknowledgeUserAlert(id: string) {
+    const response = await this.client.post(`/api/users/alerts/${id}/acknowledge`);
+    return response.data;
+  }
+
+  // Admin endpoints
+  async getAllUsers() {
+    const response = await this.client.get('/api/users/all');
+    return response.data;
+  }
+
+  async getAnalytics() {
+    const response = await this.client.get('/api/analytics');
+    return response.data;
+  }
 }
 
 // Export singleton instance
