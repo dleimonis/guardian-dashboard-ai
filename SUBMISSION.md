@@ -161,7 +161,7 @@ Disasters don't wait. Every second counts when lives are at stake. Guardian Dash
 ## 🔮 Future Vision (with MCP)
 
 With full MCP implementation, this system could:
-- Connect to any AI model (GPT, Claude, Gemini)
+- Connect to various AI models for enhanced analysis
 - Integrate with emergency services APIs
 - Scale to monitor entire countries
 - Coordinate with government systems
@@ -169,9 +169,9 @@ With full MCP implementation, this system could:
 
 ## 👥 Team
 
-Built with ❤️ using:
-- Claude Code for AI development
-- Cursor for rapid prototyping
+Built with passion using:
+- TypeScript and React for robust development
+- WebSocket for real-time communication
 - MCP architecture principles
 - Descope for secure authentication
 

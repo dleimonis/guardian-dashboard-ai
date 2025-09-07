@@ -349,13 +349,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Built for the Model Context Protocol Hackathon, demonstrating how AI agents can work together to save lives.
 
 ### Technologies
-- Built with [Claude Code](https://claude.ai/code) and [Cursor](https://cursor.sh)
 - Powered by [React](https://reactjs.org/) and [TypeScript](https://www.typescriptlang.org/)
+- Real-time WebSocket communication
 - Maps by [Leaflet](https://leafletjs.com/) and [OpenStreetMap](https://www.openstreetmap.org/)
 
 ### Team
-- Lead Developer: [Your Name]
-- AI Integration: Claude Code Assistant
+- Lead Developer: Dimitris Leimonis
+- System Architecture: Multi-Agent AI Design
 - Design: JARVIS-inspired crisis command center
 
 ## 🌟 Vision
