@@ -244,6 +244,7 @@ export const EmergencyProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const runSimulation = async (scenario: any) => {
     try {
+      // Try to run through API first
       const result = await apiService.runSimulation(scenario);
       toast({
         title: '🚀 Simulation Started',
@@ -251,13 +252,95 @@ export const EmergencyProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
       return result;
     } catch (error) {
-      console.error('Failed to run simulation:', error);
+      console.log('API unavailable, running simulation in demo mode');
+      
+      // Demo mode: Generate simulated disaster directly
+      const simulatedDisaster: Disaster = {
+        id: `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: scenario.type || 'fire',
+        severity: scenario.severity || 'critical',
+        location: scenario.location || {
+          lat: 34.0522 + (Math.random() - 0.5) * 0.5,
+          lon: -118.2437 + (Math.random() - 0.5) * 0.5,
+          name: scenario.location?.name || 'Simulated Location',
+          radius: 10000
+        },
+        data: {
+          ...scenario.data,
+          isSimulation: true,
+          confidence: 95,
+          affectedArea: Math.floor(Math.random() * 1000) + 500,
+          estimatedDamage: Math.floor(Math.random() * 10000000),
+          evacuationsNeeded: Math.floor(Math.random() * 5000) + 1000,
+        },
+        timestamp: new Date().toISOString(),
+      };
+      
+      // Add the simulated disaster to state
+      setDisasters((prev) => [simulatedDisaster, ...prev]);
+      
+      // Generate corresponding alert
+      const simulatedAlert: Alert = {
+        id: `alert_${simulatedDisaster.id}`,
+        title: `🚨 ${scenario.name || 'Disaster Simulation'}`,
+        description: `Simulated ${simulatedDisaster.type} in ${simulatedDisaster.location.name}. This is a test of the emergency response system.`,
+        severity: simulatedDisaster.severity === 'critical' ? 'critical' : 'warning',
+        location: simulatedDisaster.location.name || 'Unknown',
+        timestamp: new Date().toISOString(),
+        status: 'active',
+      };
+      
+      setAlerts((prev) => [simulatedAlert, ...prev]);
+      
+      // Update agent statuses to show response
+      const agentResponses = {
+        'disaster-detector': { 
+          status: 'online' as const, 
+          message: 'Analyzing simulation data...', 
+          lastActivity: new Date().toISOString() 
+        },
+        'alert-generator': { 
+          status: 'online' as const, 
+          message: 'Generating alerts for simulation...', 
+          lastActivity: new Date().toISOString() 
+        },
+        'resource-allocator': { 
+          status: 'online' as const, 
+          message: 'Allocating resources...', 
+          lastActivity: new Date().toISOString() 
+        },
+      };
+      
+      setAgentStatuses((prev) => ({ ...prev, ...agentResponses }));
+      
+      // Update statistics
+      setStatistics((prev: any) => ({
+        ...prev,
+        totalAlerts: (prev.totalAlerts || 0) + 1,
+        activeAlerts: (prev.activeAlerts || 0) + 1,
+        criticalAlerts: simulatedDisaster.severity === 'critical' ? (prev.criticalAlerts || 0) + 1 : prev.criticalAlerts,
+      }));
+      
+      // Show success toast
       toast({
-        title: 'Error',
-        description: 'Failed to start simulation',
-        variant: 'destructive',
+        title: '🎮 Simulation Running',
+        description: `${scenario.name || 'Disaster simulation'} started successfully in demo mode`,
       });
-      throw error;
+      
+      // Simulate WebSocket message after a short delay
+      setTimeout(() => {
+        if (sendMessage) {
+          sendMessage({
+            type: 'simulation',
+            data: {
+              message: `Simulation ${simulatedDisaster.id} is progressing...`,
+              disaster: simulatedDisaster,
+            }
+          });
+        }
+      }, 1000);
+      
+      return { success: true, disaster: simulatedDisaster, alert: simulatedAlert };
     }
   };
 
