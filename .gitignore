@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Personal documentation (not for public repo)
+RAILWAY_GUIDE_FOR_KIDS.md
+HACKATHON_SUBMISSION_CHECKLIST.md
+deploy-to-railway.sh
