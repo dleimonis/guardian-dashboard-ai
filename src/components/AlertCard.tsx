@@ -1,9 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Clock, MapPin } from 'lucide-react';
+import { AlertTriangle, Clock, MapPin, ChevronDown, ChevronUp, Shield, Navigation } from 'lucide-react';
 import { useAudioSystem } from '@/hooks/useAudioSystem';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export type AlertSeverity = 'critical' | 'warning' | 'watch';
 
@@ -31,6 +31,7 @@ const AlertCard = ({
   isNew = false
 }: AlertCardProps) => {
   const { playSound } = useAudioSystem();
+  const [showActionPlan, setShowActionPlan] = useState(false);
 
   useEffect(() => {
     if (isNew && !isAcknowledged) {
@@ -52,6 +53,31 @@ const AlertCard = ({
   };
 
   const severityColor = getSeverityColor(severity);
+
+  // Quick action items based on severity
+  const getQuickActions = () => {
+    if (severity === 'critical') {
+      return [
+        'Evacuate immediately if in danger zone',
+        'Follow official evacuation routes',
+        'Contact emergency services if needed'
+      ];
+    } else if (severity === 'warning') {
+      return [
+        'Monitor situation closely',
+        'Prepare emergency supplies',
+        'Stay informed through official channels'
+      ];
+    } else {
+      return [
+        'Stay aware of developing situation',
+        'Check emergency preparedness',
+        'Sign up for local alerts'
+      ];
+    }
+  };
+
+  const quickActions = getQuickActions();
 
   return (
     <Card 
@@ -86,20 +112,60 @@ const AlertCard = ({
         </div>
       </div>
 
-      {!isAcknowledged && onAcknowledge && (
-        <Button
-          onClick={() => onAcknowledge(id)}
-          size="sm"
-          variant="glass"
-          className="w-full"
-        >
-          Acknowledge
-        </Button>
-      )}
+      {/* Action Buttons */}
+      <div className="space-y-2">
+        {!isAcknowledged && onAcknowledge && (
+          <Button
+            onClick={() => onAcknowledge(id)}
+            size="sm"
+            variant="glass"
+            className="w-full"
+          >
+            Acknowledge
+          </Button>
+        )}
 
-      {isAcknowledged && (
-        <div className="text-xs text-success font-medium">
-          ✓ Acknowledged
+        {isAcknowledged && (
+          <div className="text-xs text-success font-medium mb-2">
+            ✓ Acknowledged
+          </div>
+        )}
+
+        {/* Action Plan Toggle */}
+        <Button
+          onClick={() => setShowActionPlan(!showActionPlan)}
+          size="sm"
+          variant="outline"
+          className="w-full text-xs"
+        >
+          <Shield className="w-3 h-3 mr-1" />
+          {showActionPlan ? 'Hide' : 'View'} Action Plan
+          {showActionPlan ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
+        </Button>
+      </div>
+
+      {/* Expandable Action Plan */}
+      {showActionPlan && (
+        <div className="mt-3 p-3 bg-muted/30 dark:bg-muted/10 rounded-lg border border-border/50 animate-slide-down">
+          <div className="flex items-center gap-2 mb-2">
+            <Navigation className="w-4 h-4 text-primary" />
+            <h4 className="text-xs font-semibold">Immediate Actions</h4>
+          </div>
+          <ul className="space-y-1">
+            {quickActions.map((action, index) => (
+              <li key={index} className="text-xs text-muted-foreground flex items-start gap-1">
+                <span className="text-primary">•</span>
+                <span>{action}</span>
+              </li>
+            ))}
+          </ul>
+          {severity === 'critical' && (
+            <div className="mt-2 pt-2 border-t border-border/30">
+              <p className="text-xs text-warning font-medium">
+                ⚠️ Emergency Services: Call 911
+              </p>
+            </div>
+          )}
         </div>
       )}
     </Card>

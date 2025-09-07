@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, AlertTriangle, Flame, Activity, CloudRain, Maximize2, Minimize2 } from 'lucide-react';
+import EmergencyDetailModal, { EmergencyDetail } from '@/components/EmergencyDetailModal';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -28,6 +29,8 @@ L.Icon.Default.mergeOptions({
 const WorldMap = () => {
   const [selectedEmergency, setSelectedEmergency] = useState<Emergency | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [modalEmergency, setModalEmergency] = useState<EmergencyDetail | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Mock emergency data with real coordinates
   const emergencies: Emergency[] = [
@@ -231,6 +234,21 @@ const WorldMap = () => {
     setIsFullscreen(!isFullscreen);
   };
 
+  const handleViewDetails = (emergency: Emergency) => {
+    setModalEmergency({
+      id: emergency.id,
+      title: emergency.title,
+      type: emergency.type,
+      severity: emergency.severity,
+      lat: emergency.lat,
+      lng: emergency.lng,
+      affectedPeople: emergency.affectedPeople,
+      description: `${emergency.severity.charAt(0).toUpperCase() + emergency.severity.slice(1)} level ${emergency.type} emergency detected. Immediate action required for affected populations.`,
+      timestamp: new Date().toISOString()
+    });
+    setIsModalOpen(true);
+  };
+
   return (
     <Card className={`relative ${isFullscreen ? 'fixed inset-0 z-50' : 'p-6'} bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass h-full transition-all duration-300`}>
       <div className={`flex items-center justify-between ${isFullscreen ? 'absolute top-4 left-4 right-4 z-[1001]' : 'mb-4'}`}>
@@ -339,7 +357,10 @@ const WorldMap = () => {
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                    <button className="w-full px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors text-sm font-medium">
+                    <button 
+                      onClick={() => handleViewDetails(emergency)}
+                      className="w-full px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-md transition-colors text-sm font-medium"
+                    >
                       View Details
                     </button>
                   </div>
@@ -391,6 +412,13 @@ const WorldMap = () => {
           </div>
         </div>
       </div>
+
+      {/* Emergency Detail Modal */}
+      <EmergencyDetailModal
+        emergency={modalEmergency}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </Card>
   );
 };
