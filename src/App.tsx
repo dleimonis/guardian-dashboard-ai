@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import UserProfile from "./components/UserProfile";
 import AdminDashboard from "./components/AdminDashboard";
+import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
 
@@ -76,13 +77,15 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/profile" element={<UserProfile />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/profile" element={<UserProfile />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Layout>
               </BrowserRouter>
             </TooltipProvider>
           </EmergencyProvider>

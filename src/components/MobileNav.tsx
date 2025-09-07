@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from '@/contexts/UserContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 import { 
   Menu, 
-  X, 
-  Activity, 
-  AlertTriangle, 
-  Map, 
-  Users,
+  Home,
+  User,
+  Shield,
   Settings,
-  Home
+  Bell,
+  Volume2,
+  Accessibility
 } from 'lucide-react';
 
 interface MobileNavProps {
@@ -24,18 +27,11 @@ const MobileNav: React.FC<MobileNavProps> = ({
   currentSection = 'dashboard'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useUser();
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'agents', label: 'AI Agents', icon: Activity },
-    { id: 'alerts', label: 'Alerts', icon: AlertTriangle },
-    { id: 'map', label: 'World Map', icon: Map },
-    { id: 'community', label: 'Community', icon: Users },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ];
-
-  const handleNavigate = (section: string) => {
-    onNavigate?.(section);
+  const handleNavigate = (path: string) => {
+    navigate(path);
     setIsOpen(false);
   };
 
@@ -62,22 +58,76 @@ const MobileNav: React.FC<MobileNavProps> = ({
         </SheetHeader>
         
         <nav className="mt-8 space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentSection === item.id;
+          {/* Main Navigation */}
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 h-12"
+            onClick={() => handleNavigate('/')}
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-sm font-medium">Dashboard</span>
+          </Button>
+          
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 h-12"
+            onClick={() => handleNavigate('/profile')}
+          >
+            <User className="h-5 w-5" />
+            <span className="text-sm font-medium">User Profile</span>
+          </Button>
+          
+          {user?.role === 'admin' && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 h-12"
+              onClick={() => handleNavigate('/admin')}
+            >
+              <Shield className="h-5 w-5" />
+              <span className="text-sm font-medium">Admin Dashboard</span>
+            </Button>
+          )}
+          
+          <Separator className="my-4" />
+          
+          {/* Settings Section */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground px-3">Settings</p>
             
-            return (
-              <Button
-                key={item.id}
-                variant={isActive ? 'default' : 'ghost'}
-                className="w-full justify-start gap-3 h-12"
-                onClick={() => handleNavigate(item.id)}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </Button>
-            );
-          })}
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 h-12"
+              onClick={() => {
+                // These could open modals or sections
+                setIsOpen(false);
+              }}
+            >
+              <Bell className="h-5 w-5" />
+              <span className="text-sm font-medium">Notifications</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 h-12"
+              onClick={() => {
+                setIsOpen(false);
+              }}
+            >
+              <Volume2 className="h-5 w-5" />
+              <span className="text-sm font-medium">Sound Settings</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 h-12"
+              onClick={() => {
+                setIsOpen(false);
+              }}
+            >
+              <Accessibility className="h-5 w-5" />
+              <span className="text-sm font-medium">Accessibility</span>
+            </Button>
+          </div>
         </nav>
 
         <div className="absolute bottom-4 left-4 right-4">

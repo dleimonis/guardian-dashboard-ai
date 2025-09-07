@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { useEmergency } from '@/contexts/EmergencyContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import Header from '@/components/Header';
 import AgentStatusCard from '@/components/AgentStatusCard';
 import AlertCard from '@/components/AlertCard';
 import StatisticsBar from '@/components/StatisticsBar';
@@ -98,10 +97,6 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-background">
-      <ErrorBoundary fallback={<div className="p-4 text-warning">Header failed to load</div>}>
-        <Header />
-      </ErrorBoundary>
-      
       <div className={`${isMobile ? 'flex-col' : 'flex'} h-[calc(100vh-128px)]`}>
         {/* Left Sidebar - Agent Status (Desktop only, mobile uses Sheet) */}
         {!isMobile && (
