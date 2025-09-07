@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <h1>Guardian AI Icon Generator</h1>
+    <canvas id="canvas"></canvas>
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        
+        sizes.forEach(size => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#dc2626');
+            gradient.addColorStop(1, '#991b1b');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Center circle
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/3, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            
+            // Shield icon
+            ctx.beginPath();
+            ctx.moveTo(size/2, size/3);
+            ctx.lineTo(size/2 - size/5, size/2.5);
+            ctx.lineTo(size/2 - size/5, size/1.8);
+            ctx.quadraticCurveTo(size/2, size/1.4, size/2 + size/5, size/1.8);
+            ctx.lineTo(size/2 + size/5, size/2.5);
+            ctx.closePath();
+            ctx.fillStyle = '#dc2626';
+            ctx.fill();
+            
+            // Alert symbol
+            ctx.font = `bold ${size/4}px Arial`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('!', size/2, size/2);
+            
+            // Download link
+            canvas.toBlob(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `icon-${size}x${size}.png`;
+                document.body.appendChild(a);
+                a.textContent = `Download ${size}x${size}`;
+                document.body.appendChild(document.createElement('br'));
+            });
+        });
+        
+        // Create badge icon
+        const badgeCanvas = document.createElement('canvas');
+        badgeCanvas.width = 72;
+        badgeCanvas.height = 72;
+        const badgeCtx = badgeCanvas.getContext('2d');
+        
+        badgeCtx.beginPath();
+        badgeCtx.arc(36, 36, 36, 0, Math.PI * 2);
+        badgeCtx.fillStyle = '#dc2626';
+        badgeCtx.fill();
+        
+        badgeCtx.font = 'bold 40px Arial';
+        badgeCtx.fillStyle = '#ffffff';
+        badgeCtx.textAlign = 'center';
+        badgeCtx.textBaseline = 'middle';
+        badgeCtx.fillText('!', 36, 36);
+        
+        badgeCanvas.toBlob(blob => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'badge-72x72.png';
+            document.body.appendChild(a);
+            a.textContent = 'Download Badge 72x72';
+            document.body.appendChild(document.createElement('br'));
+        });
+    </script>
+</body>
+</html>

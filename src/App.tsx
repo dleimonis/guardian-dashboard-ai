@@ -22,6 +22,19 @@ const App = () => {
   const [apiTokens, setApiTokens] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
 
+  // Register service worker for notifications
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('Service Worker registered:', registration);
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+  }, []);
+
   // Check for existing session on mount
   useEffect(() => {
     const storedToken = localStorage.getItem('auth_token');

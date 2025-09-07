@@ -11,6 +11,7 @@ import SoundControlPanel from '@/components/SoundControlPanel';
 import VoiceAlerts from '@/components/VoiceAlerts';
 import AccessibilitySettings from '@/components/AccessibilitySettings';
 import MobileNav from '@/components/MobileNav';
+import NotificationCenter from '@/components/NotificationCenter';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,6 +91,7 @@ const Header = () => {
       {/* Center - Controls (Hidden on mobile, in dropdown) */}
       {!isMobile && (
         <div className="flex-1 flex justify-center items-center gap-4">
+          <NotificationCenter />
           <SoundControlPanel />
           <VoiceAlerts />
           <AccessibilitySettings />
@@ -113,6 +115,10 @@ const Header = () => {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Settings</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              
+              <DropdownMenuItem className="p-2">
+                <NotificationCenter />
+              </DropdownMenuItem>
               
               <DropdownMenuItem className="p-2">
                 <SoundControlPanel />
