@@ -8,6 +8,8 @@ import { disasterRoutes, setOrchestrator as setDisasterOrchestrator } from './ro
 import { alertRoutes, setDependencies as setAlertDependencies } from './routes/alerts';
 import { agentRoutes, setOrchestrator as setAgentOrchestrator } from './routes/agents';
 import { createAuthRoutes } from './routes/auth';
+import communityRoutes from './routes/community';
+import { analyticsRoutes, setOrchestrator as setAnalyticsOrchestrator, recordDisasterEvent } from './routes/analytics';
 import { WebSocketManager } from './services/websocket';
 import { AgentOrchestrator } from './agents/orchestrator';
 import { DisasterMonitoringService } from './services/monitoring';
@@ -99,6 +101,8 @@ app.use('/api/auth', createAuthRoutes(authService, logger));
 app.use('/api/disasters', disasterRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/agents', agentRoutes);
+app.use('/api/community', communityRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -128,6 +132,7 @@ const orchestrator = new AgentOrchestrator(logger, wsManager);
 setDisasterOrchestrator(orchestrator);
 setAlertDependencies(orchestrator, wsManager);
 setAgentOrchestrator(orchestrator);
+setAnalyticsOrchestrator(orchestrator);
 
 // Initialize Disaster Monitoring Service
 const monitoringService = new DisasterMonitoringService(logger, orchestrator);

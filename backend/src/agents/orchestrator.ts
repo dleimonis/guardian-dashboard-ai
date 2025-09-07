@@ -6,6 +6,7 @@ import { FireWatcherAgent } from './detection/fire-watcher';
 import { QuakeDetectorAgent } from './detection/quake-detector';
 import { WeatherTrackerAgent } from './detection/weather-tracker';
 import { FloodMonitorAgent } from './detection/flood-monitor';
+import { CommunityReporter } from './detection/community-reporter';
 import { ThreatAnalyzerAgent } from './analysis/threat-analyzer';
 import { ImpactPredictorAgent } from './analysis/impact-predictor';
 import { RouteCalculatorAgent } from './analysis/route-calculator';
@@ -13,6 +14,7 @@ import { PriorityManagerAgent } from './analysis/priority-manager';
 import { AlertDispatcherAgent } from './action/alert-dispatcher';
 import { NotificationManagerAgent } from './action/notification-manager';
 import { StatusReporterAgent } from './action/status-reporter';
+import { recordDisasterEvent } from '../routes/analytics';
 
 export interface AgentMessage {
   from: string;
@@ -57,6 +59,7 @@ export class AgentOrchestrator extends EventEmitter {
     this.registerAgent(new QuakeDetectorAgent(this.logger, this));
     this.registerAgent(new WeatherTrackerAgent(this.logger, this));
     this.registerAgent(new FloodMonitorAgent(this.logger, this));
+    this.registerAgent(new CommunityReporter());
 
     // Initialize Analysis Squad
     this.registerAgent(new ThreatAnalyzerAgent(this.logger, this));
@@ -172,6 +175,9 @@ export class AgentOrchestrator extends EventEmitter {
 
   private handleDisasterDetection(event: DisasterEvent) {
     this.logger.warn(`Disaster detected:`, event);
+    
+    // Record for analytics
+    recordDisasterEvent(event);
     
     // Send to analysis squad
     this.sendMessage({

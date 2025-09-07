@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useEmergency } from '@/contexts/EmergencyContext';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Header from '@/components/Header';
 import AgentStatusCard from '@/components/AgentStatusCard';
@@ -9,8 +10,12 @@ import WorldMap from '@/components/WorldMap';
 import EmergencyButton from '@/components/EmergencyButton';
 import LiveTicker from '@/components/LiveTicker';
 import InfoModal from '@/components/InfoModal';
+import CommunityReport from '@/components/CommunityReport';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Minimize2, Maximize2 } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ChevronDown, ChevronUp, Minimize2, Maximize2, Activity, AlertTriangle, BarChart3 } from 'lucide-react';
 
 const Index = () => {
   console.log('Index component rendering...');
@@ -18,7 +23,11 @@ const Index = () => {
   const [isAgentsCollapsed, setIsAgentsCollapsed] = useState(() => {
     return localStorage.getItem('agentsCollapsed') === 'true';
   });
+  const [mobileAgentsOpen, setMobileAgentsOpen] = useState(false);
+  const [mobileAlertsOpen, setMobileAlertsOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const { alerts: contextAlerts, agentStatuses, isConnected, acknowledgeAlert: contextAcknowledgeAlert } = useEmergency();
+  const { isMobile, isTablet, isDesktop } = useIsMobile();
 
   // Convert agent statuses to display format
   const agents = useMemo(() => {
@@ -93,9 +102,10 @@ const Index = () => {
         <Header />
       </ErrorBoundary>
       
-      <div className="flex h-[calc(100vh-128px)]">
-        {/* Left Sidebar - Agent Status */}
-        <div className={`${isAgentsCollapsed ? 'w-16' : 'w-80'} transition-all duration-300 p-6 space-y-4 overflow-y-auto border-r border-border/50`}>
+      <div className={`${isMobile ? 'flex-col' : 'flex'} h-[calc(100vh-128px)]`}>
+        {/* Left Sidebar - Agent Status (Desktop only, mobile uses Sheet) */}
+        {!isMobile && (
+          <div className={`${isAgentsCollapsed ? 'w-16' : 'w-80'} transition-all duration-300 p-6 space-y-4 overflow-y-auto border-r border-border/50`}>
           <div className="flex items-center justify-between mb-4">
             <h2 className={`text-lg font-semibold text-foreground flex items-center ${isAgentsCollapsed ? 'hidden' : ''}`}>
               <div className={`w-2 h-2 ${isConnected ? 'bg-success' : 'bg-warning'} rounded-full mr-3 animate-pulse`} />
@@ -145,9 +155,10 @@ const Index = () => {
             </div>
           )}
         </div>
+        )}
 
         {/* Main Content Area */}
-        <div className="flex-1 p-6">
+        <div className={`flex-1 ${isMobile ? 'p-2' : 'p-6'}`}>
           <ErrorBoundary fallback={<div className="p-4 text-warning">Statistics failed to load</div>}>
             <StatisticsBar
               activeEmergencies={activeEmergencies}
@@ -161,8 +172,9 @@ const Index = () => {
           </ErrorBoundary>
         </div>
 
-        {/* Right Sidebar - Alert Feed */}
-        <div className="w-96 p-6 space-y-4 overflow-y-auto">
+        {/* Right Sidebar - Alert Feed (Desktop only, mobile uses Sheet) */}
+        {!isMobile && (
+          <div className="w-96 p-6 space-y-4 overflow-y-auto">
           <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-2 h-2 bg-critical rounded-full mr-3 animate-status-blink" />
@@ -187,7 +199,86 @@ const Index = () => {
             />
           ))}
         </div>
+        )}
       </div>
+
+      {/* Mobile Floating Action Buttons */}
+      {isMobile && (
+        <div className="fixed bottom-20 left-4 right-4 flex justify-between z-40">
+          {/* Agents Button */}
+          <Sheet open={mobileAgentsOpen} onOpenChange={setMobileAgentsOpen}>
+            <SheetTrigger asChild>
+              <Button
+                size="lg"
+                className="rounded-full shadow-lg"
+                variant="outline"
+              >
+                <Activity className="h-5 w-5 mr-2" />
+                Agents
+                <span className="ml-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
+                  {agents.filter(a => a.status === 'online').length}/{agents.length}
+                </span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[90%] sm:w-[400px]">
+              <SheetHeader>
+                <SheetTitle>Monitoring Agents</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-3 overflow-y-auto max-h-[70vh]">
+                {agents.map((agent) => (
+                  <AgentStatusCard
+                    key={agent.name}
+                    name={agent.name}
+                    description={agent.description}
+                    status={agent.status}
+                    type={agent.type}
+                    lastUpdate={agent.lastUpdate}
+                  />
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Alerts Button */}
+          <Sheet open={mobileAlertsOpen} onOpenChange={setMobileAlertsOpen}>
+            <SheetTrigger asChild>
+              <Button
+                size="lg"
+                className="rounded-full shadow-lg"
+                variant={alerts.filter(a => !acknowledgedAlerts.has(a.id)).length > 0 ? 'destructive' : 'outline'}
+              >
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                Alerts
+                {alerts.filter(a => !acknowledgedAlerts.has(a.id)).length > 0 && (
+                  <span className="ml-2 bg-background text-foreground rounded-full px-2 py-0.5 text-xs">
+                    {alerts.filter(a => !acknowledgedAlerts.has(a.id)).length}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[90%] sm:w-[400px]">
+              <SheetHeader>
+                <SheetTitle>Alert Feed</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-3 overflow-y-auto max-h-[70vh]">
+                {alerts.map((alert) => (
+                  <AlertCard
+                    key={alert.id}
+                    id={alert.id}
+                    title={alert.title}
+                    description={alert.description}
+                    location={alert.location}
+                    severity={alert.severity}
+                    timestamp={alert.timestamp}
+                    isAcknowledged={acknowledgedAlerts.has(alert.id)}
+                    onAcknowledge={handleAcknowledgeAlert}
+                  />
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      )}
 
       {/* Bottom Ticker */}
       <ErrorBoundary fallback={<div className="p-2 text-warning text-center">Live updates unavailable</div>}>
@@ -198,6 +289,60 @@ const Index = () => {
       <ErrorBoundary fallback={null}>
         <EmergencyButton />
       </ErrorBoundary>
+
+      {/* Analytics Dashboard Button */}
+      <div className={`fixed ${isMobile ? 'bottom-52 right-4' : 'bottom-44 right-6'} z-50`}>
+        {isMobile ? (
+          <Sheet open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
+            <SheetTrigger asChild>
+              <Button
+                size="lg"
+                className="rounded-full shadow-lg bg-primary hover:bg-primary/90"
+                title="View Analytics Dashboard"
+              >
+                <BarChart3 className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[90vh]">
+              <SheetHeader>
+                <SheetTitle>Analytics Dashboard</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 overflow-y-auto h-[calc(100%-4rem)]">
+                <AnalyticsDashboard />
+              </div>
+            </SheetContent>
+          </Sheet>
+        ) : (
+          <Dialog open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="lg"
+                className="rounded-full shadow-lg bg-primary hover:bg-primary/90"
+                title="View Analytics Dashboard"
+              >
+                <BarChart3 className="h-5 w-5 mr-2" />
+                Analytics
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Analytics Dashboard</DialogTitle>
+              </DialogHeader>
+              <AnalyticsDashboard />
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
+      {/* Community Report Button */}
+      <div className={`fixed ${isMobile ? 'bottom-32 right-4' : 'bottom-24 right-6'} z-50`}>
+        <CommunityReport 
+          onSubmit={(report) => {
+            console.log('Community report submitted:', report);
+            // Report will be handled by backend and broadcast via WebSocket
+          }}
+        />
+      </div>
 
       {/* Info Modal */}
       <InfoModal />

@@ -1,8 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Clock, MapPin, ChevronDown, ChevronUp, Shield, Navigation } from 'lucide-react';
+import { AlertTriangle, Clock, MapPin, ChevronDown, ChevronUp, Shield, Navigation, Volume2 } from 'lucide-react';
 import { useAudioSystem } from '@/hooks/useAudioSystem';
+import { useVoiceAlerts } from '@/hooks/useVoiceAlerts';
 import { useEffect, useState } from 'react';
 
 export type AlertSeverity = 'critical' | 'warning' | 'watch';
@@ -31,13 +32,22 @@ const AlertCard = ({
   isNew = false
 }: AlertCardProps) => {
   const { playSound } = useAudioSystem();
+  const { speakAlert, settings: voiceSettings } = useVoiceAlerts();
   const [showActionPlan, setShowActionPlan] = useState(false);
 
   useEffect(() => {
     if (isNew && !isAcknowledged) {
       playSound(severity === 'critical' ? 'emergency' : 'alert');
+      
+      // Speak the alert if voice is enabled
+      if (voiceSettings.enabled) {
+        const voicePriority = severity === 'critical' ? 'critical' : 
+                             severity === 'warning' ? 'high' : 'medium';
+        const alertText = `${severity} alert: ${title}. Location: ${location}. ${description}`;
+        speakAlert({ text: alertText, priority: voicePriority });
+      }
     }
-  }, [isNew, isAcknowledged, severity, playSound]);
+  }, [isNew, isAcknowledged, severity, playSound, speakAlert, voiceSettings.enabled, title, location, description]);
 
   const getSeverityColor = (severity: AlertSeverity) => {
     switch (severity) {
@@ -81,7 +91,7 @@ const AlertCard = ({
 
   return (
     <Card 
-      className={`p-4 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass transition-all duration-300 ${
+      className={`p-3 md:p-4 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass transition-all duration-300 ${
         !isAcknowledged && severity === 'critical' ? 'animate-pulse-glow' : 'hover:shadow-glow-secondary'
       } ${isNew ? 'animate-slide-in-right-glow' : 'animate-slide-up'}`}
     >
@@ -119,7 +129,7 @@ const AlertCard = ({
             onClick={() => onAcknowledge(id)}
             size="sm"
             variant="glass"
-            className="w-full"
+            className="w-full min-h-[44px] touch-manipulation"
           >
             Acknowledge
           </Button>
@@ -136,7 +146,7 @@ const AlertCard = ({
           onClick={() => setShowActionPlan(!showActionPlan)}
           size="sm"
           variant="outline"
-          className="w-full text-xs"
+          className="w-full text-xs min-h-[44px] touch-manipulation"
         >
           <Shield className="w-3 h-3 mr-1" />
           {showActionPlan ? 'Hide' : 'View'} Action Plan

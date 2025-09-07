@@ -22,6 +22,9 @@ export class QuakeDetectorAgent extends BaseAgent {
   private detectedQuakes: Map<string, QuakeData> = new Map();
   private minMagnitude: number;
   private usgsApiUrl: string;
+  private useRealData: boolean;
+  private lastApiCall: Date | null = null;
+  private apiCallInterval: number = 300000; // 5 minutes in milliseconds
 
   constructor(logger: Logger, orchestrator: AgentOrchestrator) {
     super(
@@ -31,18 +34,25 @@ export class QuakeDetectorAgent extends BaseAgent {
       orchestrator
     );
     this.lastCheckTime = new Date();
-    this.minMagnitude = parseFloat(process.env.EARTHQUAKE_MIN_MAGNITUDE || '4.0');
+    this.minMagnitude = parseFloat(process.env.EARTHQUAKE_MIN_MAGNITUDE || '2.5'); // Lower threshold for more data
     this.usgsApiUrl = process.env.USGS_API_URL || 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary';
+    this.useRealData = process.env.USE_REAL_EARTHQUAKE_DATA !== 'false'; // Default to true
   }
 
   protected async initialize(): Promise<void> {
     this.logger.info(`${this.name} initializing...`);
     
-    try {
-      await this.testUSGSConnection();
-      this.logActivity('USGS API connection established');
-    } catch (error) {
-      this.logger.warn(`${this.name} running in simulation mode - USGS API not available`);
+    if (this.useRealData) {
+      try {
+        await this.testUSGSConnection();
+        this.logActivity('USGS API connection established - using REAL earthquake data');
+        this.logger.info('✅ QuakeDetector connected to REAL USGS earthquake feed');
+      } catch (error) {
+        this.logger.warn(`${this.name} falling back to simulation mode - USGS API not available`);
+        this.useRealData = false;
+      }
+    } else {
+      this.logger.info(`${this.name} configured for simulation mode`);
     }
   }
 
@@ -90,31 +100,72 @@ export class QuakeDetectorAgent extends BaseAgent {
   }
 
   private async checkForEarthquakes(): Promise<QuakeData[]> {
-    try {
-      // Try to get real data from USGS
-      return await this.fetchUSGSData();
-    } catch (error) {
-      // Fall back to simulation if API is unavailable
-      if (Math.random() > 0.97) {
-        return this.simulateEarthquakeDetection();
+    // Check if we should use real data and respect rate limiting
+    if (this.useRealData) {
+      const now = new Date();
+      
+      // Rate limit API calls to every 5 minutes
+      if (!this.lastApiCall || (now.getTime() - this.lastApiCall.getTime()) >= this.apiCallInterval) {
+        try {
+          this.lastApiCall = now;
+          const realData = await this.fetchUSGSData();
+          
+          if (realData.length > 0) {
+            this.logger.info(`🌍 Fetched ${realData.length} real earthquakes from USGS`);
+          }
+          
+          return realData;
+        } catch (error) {
+          this.logger.error('Failed to fetch real USGS data, falling back to simulation:', error);
+          this.useRealData = false; // Temporarily disable real data
+          
+          // Re-enable after 10 minutes
+          setTimeout(() => {
+            this.useRealData = process.env.USE_REAL_EARTHQUAKE_DATA !== 'false';
+            this.logger.info('Re-enabling real USGS data fetching');
+          }, 600000);
+        }
       }
-      return [];
     }
+    
+    // Fall back to simulation
+    if (Math.random() > 0.95) { // Reduced frequency for simulation
+      return this.simulateEarthquakeDetection();
+    }
+    
+    return [];
   }
 
   private async fetchUSGSData(): Promise<QuakeData[]> {
-    const url = `${this.usgsApiUrl}/all_hour.geojson`;
+    // Use 'all_hour' for recent earthquakes or 'all_day' for more data
+    const timeframe = this.minMagnitude < 3 ? 'all_day' : 'all_hour';
+    const url = `${this.usgsApiUrl}/${timeframe}.geojson`;
+    
+    this.logger.debug(`Fetching earthquakes from: ${url}`);
     
     try {
-      const response = await axios.get(url, { timeout: 10000 });
+      const response = await axios.get(url, { 
+        timeout: 15000,
+        headers: {
+          'User-Agent': 'Guardian-Dashboard-AI/1.0',
+          'Accept': 'application/json'
+        }
+      });
+      
       const data = response.data;
       
-      if (!data.features) {
+      if (!data.features || !Array.isArray(data.features)) {
+        this.logger.warn('Invalid USGS response format');
         return [];
       }
 
-      return data.features
-        .filter((feature: any) => feature.properties.mag >= this.minMagnitude)
+      const earthquakes = data.features
+        .filter((feature: any) => 
+          feature.properties && 
+          feature.properties.mag >= this.minMagnitude &&
+          feature.geometry && 
+          feature.geometry.coordinates
+        )
         .map((feature: any) => ({
           id: feature.id,
           magnitude: feature.properties.mag,
@@ -122,12 +173,24 @@ export class QuakeDetectorAgent extends BaseAgent {
             latitude: feature.geometry.coordinates[1],
             longitude: feature.geometry.coordinates[0],
             depth: feature.geometry.coordinates[2],
-            place: feature.properties.place,
+            place: feature.properties.place || 'Unknown location',
           },
           time: new Date(feature.properties.time).toISOString(),
           tsunami: feature.properties.tsunami === 1,
           alert: feature.properties.alert,
         }));
+      
+      // Log some interesting earthquakes for debugging
+      if (earthquakes.length > 0) {
+        const significantQuakes = earthquakes.filter((q: QuakeData) => q.magnitude >= 4.0);
+        if (significantQuakes.length > 0) {
+          this.logger.info(`🌍 Significant earthquakes detected:`, 
+            significantQuakes.map((q: QuakeData) => `M${q.magnitude} at ${q.location.place}`).join(', ')
+          );
+        }
+      }
+      
+      return earthquakes;
     } catch (error) {
       this.logger.error('Failed to fetch USGS data:', error);
       throw error;
@@ -302,7 +365,7 @@ export class QuakeDetectorAgent extends BaseAgent {
   }
 
   protected getProcessingInterval(): number {
-    // Check for earthquakes every 1 minute
-    return 60000;
+    // Check every 30 seconds for simulation, every 5 minutes for real data
+    return this.useRealData ? 30000 : 30000; // Keep checking frequently but API calls are rate limited
   }
 }

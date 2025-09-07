@@ -147,4 +147,66 @@ All colors MUST be HSL.
     @apply bg-critical;
     box-shadow: 0 0 10px hsl(var(--critical) / 0.5);
   }
+  
+  /* High Contrast Mode for Accessibility */
+  .high-contrast {
+    filter: contrast(1.25);
+  }
+  
+  .high-contrast .text-muted-foreground {
+    @apply text-foreground;
+    opacity: 0.9;
+  }
+  
+  .high-contrast .border-border\/50 {
+    @apply border-border;
+  }
+  
+  .high-contrast .glass-panel,
+  .high-contrast .glass-card {
+    @apply border-2;
+    background-color: hsl(var(--card)) !important;
+  }
+  
+  .high-contrast button {
+    @apply border-2;
+  }
+  
+  .high-contrast .text-xs {
+    font-size: 0.875rem;
+  }
+  
+  .high-contrast .text-sm {
+    font-size: 1rem;
+  }
+  
+  /* Screen Reader Only Content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  /* Focus visible improvements for keyboard navigation */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+  
+  /* Reduced motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

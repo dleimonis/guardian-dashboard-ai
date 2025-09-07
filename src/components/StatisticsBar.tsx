@@ -54,13 +54,13 @@ const StatisticsBar = ({ activeEmergencies, peopleWarned, responseTime, systemSt
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
       {stats.map((stat, index) => (
-        <Card key={index} className="p-4 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass hover:shadow-glow-secondary transition-all duration-300">
+        <Card key={index} className="p-3 md:p-4 bg-gradient-surface backdrop-blur-glass border-border/50 shadow-glass hover:shadow-glow-secondary transition-all duration-300">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">{stat.label}</p>
-              <p className={`text-lg font-bold text-${stat.color}`}>
+            <div className="flex-1">
+              <p className="text-xs text-muted-foreground mb-1 truncate">{stat.label}</p>
+              <p className={`text-sm md:text-lg font-bold text-${stat.color}`}>
                 {stat.label === 'People Warned' ? (
                   <CountUpNumber value={peopleWarned} formatter={(n) => n.toLocaleString()} />
                 ) : stat.label === 'Active Emergencies' ? (
@@ -72,8 +72,8 @@ const StatisticsBar = ({ activeEmergencies, peopleWarned, responseTime, systemSt
                 )}
               </p>
             </div>
-            <div className={`p-2 rounded-lg bg-${stat.color}/20`}>
-              <stat.icon className={`w-5 h-5 text-${stat.color}`} />
+            <div className={`p-1.5 md:p-2 rounded-lg bg-${stat.color}/20`}>
+              <stat.icon className={`w-4 h-4 md:w-5 md:h-5 text-${stat.color}`} />
             </div>
           </div>
           
