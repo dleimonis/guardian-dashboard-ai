@@ -4,9 +4,9 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import winston from 'winston';
-import { disasterRoutes } from './routes/disasters';
-import { alertRoutes } from './routes/alerts';
-import { agentRoutes } from './routes/agents';
+import { disasterRoutes, setOrchestrator as setDisasterOrchestrator } from './routes/disasters';
+import { alertRoutes, setDependencies as setAlertDependencies } from './routes/alerts';
+import { agentRoutes, setOrchestrator as setAgentOrchestrator } from './routes/agents';
 import { WebSocketManager } from './services/websocket';
 import { AgentOrchestrator } from './agents/orchestrator';
 import { DisasterMonitoringService } from './services/monitoring';
@@ -77,6 +77,11 @@ const wsManager = new WebSocketManager(wss, logger);
 
 // Initialize Agent Orchestrator
 const orchestrator = new AgentOrchestrator(logger, wsManager);
+
+// Set orchestrator in routes
+setDisasterOrchestrator(orchestrator);
+setAlertDependencies(orchestrator, wsManager);
+setAgentOrchestrator(orchestrator);
 
 // Initialize Disaster Monitoring Service
 const monitoringService = new DisasterMonitoringService(logger, orchestrator);

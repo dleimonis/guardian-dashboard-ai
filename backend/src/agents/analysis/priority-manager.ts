@@ -198,7 +198,7 @@ export class PriorityManagerAgent extends BaseAgent {
     
     this.logActivity('Priority assigned', {
       disasterId: threatData.threatId,
-      priorityLevel: disasterPriority.overallPriority,
+      priorityLevel: disasterPriority.overallPriority as 1 | 2 | 3 | 4 | 5,
       score: priorityScore,
     });
   }
@@ -256,7 +256,7 @@ export class PriorityManagerAgent extends BaseAgent {
     return {
       priorityId: `priority_${Date.now()}`,
       disasterId: threatData.threatId,
-      priorityLevel: disasterPriority.overallPriority,
+      priorityLevel: disasterPriority.overallPriority as 1 | 2 | 3 | 4 | 5,
       category: this.determineCategory(threatData),
       actions: actions,
       resources: resources,

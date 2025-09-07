@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with PostGIS extension for geospatial data
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: guardian_postgres
+    environment:
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: guardian_pass
+      POSTGRES_DB: guardian_db
+      POSTGRES_EXTENSIONS: postgis
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - guardian_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guardian -d guardian_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and queue management
+  redis:
+    image: redis:7-alpine
+    container_name: guardian_redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - guardian_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Commander - Web UI for Redis (Development only)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: guardian_redis_commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    networks:
+      - guardian_network
+    depends_on:
+      - redis
+    profiles:
+      - dev
+
+  # pgAdmin - PostgreSQL Web UI (Development only)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: guardian_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@guardian.ai
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "8082:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - guardian_network
+    depends_on:
+      - postgres
+    profiles:
+      - dev
+
+  # Bull Dashboard - Queue monitoring UI (Development only)
+  bull-board:
+    image: deadly0/bull-board:latest
+    container_name: guardian_bull_board
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 1
+    ports:
+      - "8083:3000"
+    networks:
+      - guardian_network
+    depends_on:
+      - redis
+    profiles:
+      - dev
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  guardian_network:
+    driver: bridge
+    name: guardian_network

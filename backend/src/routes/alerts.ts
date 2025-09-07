@@ -1,9 +1,16 @@
 import { Router } from 'express';
 import { DescopeAuthService, AuthenticatedRequest } from '../services/auth';
-import { logger, wsManager, orchestrator } from '../index';
+import { logger } from '../services/logger';
 
 const router = Router();
 const authService = new DescopeAuthService(logger);
+let orchestrator: any;
+let wsManager: any;
+
+export function setDependencies(orch: any, ws: any) {
+  orchestrator = orch;
+  wsManager = ws;
+}
 
 // Get all alerts
 router.get('/', async (req, res) => {
@@ -15,7 +22,7 @@ router.get('/', async (req, res) => {
     const alerts: any[] = [];
     
     // Generate alerts based on agent metrics
-    if (alertDispatcherStatus?.metrics?.activeAlerts > 0) {
+    if (alertDispatcherStatus && alertDispatcherStatus.metrics?.activeAlerts > 0) {
       for (let i = 0; i < Math.min(alertDispatcherStatus.metrics.activeAlerts, Number(limit)); i++) {
         alerts.push({
           id: `alert_${Date.now()}_${i}`,

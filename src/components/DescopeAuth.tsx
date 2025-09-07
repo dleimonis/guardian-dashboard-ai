@@ -31,7 +31,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
       description: 'Fire detection from satellites',
       keyName: 'nasa_map_key',
       placeholder: 'Enter your NASA FIRMS MAP_KEY',
-      keyValue: ''
+      keyValue: import.meta.env.VITE_DEMO_NASA_KEY || ''
     },
     { 
       name: 'USGS Earthquake', 

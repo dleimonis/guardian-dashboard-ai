@@ -1,4 +1,4 @@
-import { DescopeClient } from '@descope/node-sdk';
+import DescopeClient from '@descope/node-sdk';
 import { Request, Response, NextFunction } from 'express';
 import { Logger } from 'winston';
 
@@ -15,7 +15,7 @@ interface ServiceToken {
 }
 
 export class DescopeAuthService {
-  private client: DescopeClient;
+  private client: any;
   private logger: Logger;
   private userTokens: Map<string, ServiceToken[]> = new Map();
 

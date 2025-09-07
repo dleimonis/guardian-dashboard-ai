@@ -1,9 +1,14 @@
 import { Router } from 'express';
 import { DescopeAuthService } from '../services/auth';
-import { logger, orchestrator } from '../index';
+import { logger } from '../services/logger';
 
 const router = Router();
 const authService = new DescopeAuthService(logger);
+let orchestrator: any;
+
+export function setOrchestrator(orch: any) {
+  orchestrator = orch;
+}
 
 // Get all agent statuses
 router.get('/status', async (req, res) => {
