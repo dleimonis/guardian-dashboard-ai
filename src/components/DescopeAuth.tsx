@@ -228,6 +228,18 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
     }
   };
 
+  // Auto-redirect when setup is complete
+  useEffect(() => {
+    if (authStep === 'ready') {
+      // Auto-redirect after 2 seconds to show success message
+      const timer = setTimeout(() => {
+        proceedToApp();
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [authStep]);
+
   const proceedToApp = async () => {
     try {
       // Verify required services are connected
