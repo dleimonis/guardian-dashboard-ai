@@ -157,7 +157,7 @@ class ApiService {
   }
 
   async saveApiKeys(apiKeys: Record<string, string>) {
-    const response = await this.client.post('/api/auth/api-keys', { apiKeys });
+    const response = await this.client.post('/api/auth/save-api-keys', { apiKeys });
     return response.data;
   }
 
