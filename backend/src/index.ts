@@ -12,6 +12,7 @@ import { WebSocketManager } from './services/websocket';
 import { AgentOrchestrator } from './agents/orchestrator';
 import { DisasterMonitoringService } from './services/monitoring';
 import { DescopeAuthService } from './services/descope-auth';
+import { logDemoStatus } from './config/demo-mode';
 
 dotenv.config();
 
@@ -40,11 +41,41 @@ const authService = new DescopeAuthService({
   managementKey: process.env.DESCOPE_MANAGEMENT_KEY
 }, logger);
 
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:8080'], // Vite dev servers
+// Configure CORS for development and production
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:5174', 
+      'http://localhost:8080',
+      process.env.FRONTEND_URL,
+      // Add Lovable domains
+      /https:\/\/.*\.lovable\.app$/,
+      /https:\/\/.*\.lovableproject\.com$/,
+    ];
+    
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin matches allowed patterns
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return allowed === origin;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-}));
+};
+
+// Middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -99,6 +130,9 @@ const monitoringService = new DisasterMonitoringService(logger, orchestrator);
 server.listen(port, () => {
   logger.info(`Guardian Dashboard Backend running on port ${port}`);
   logger.info(`WebSocket server available at ws://localhost:${port}/ws`);
+  
+  // Log demo mode status for hackathon
+  logDemoStatus(logger);
   
   // Start monitoring services
   monitoringService.start();

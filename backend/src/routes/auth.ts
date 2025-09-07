@@ -27,7 +27,7 @@ export function createAuthRoutes(authService: DescopeAuthService, logger: Logger
         status: (code: number) => ({
           json: (data: any) => ({ statusCode: code, data })
         })
-      } as express.Response;
+      } as any;
 
       let userInfo: any = null;
       const mockNext = (error?: any) => {
