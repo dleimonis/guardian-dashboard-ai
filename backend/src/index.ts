@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import winston from 'winston';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { disasterRoutes, setOrchestrator as setDisasterOrchestrator } from './routes/disasters';
 import { alertRoutes, setDependencies as setAlertDependencies } from './routes/alerts';
 import { agentRoutes, setOrchestrator as setAgentOrchestrator } from './routes/agents';
@@ -16,6 +18,8 @@ import { AgentOrchestrator } from './agents/orchestrator';
 import { DisasterMonitoringService } from './services/monitoring';
 import { DescopeAuthService } from './services/descope-auth';
 import { logDemoStatus } from './config/demo-mode';
+import config from './config/environment';
+import { sanitizeAllInputs } from './middleware/validation';
 
 dotenv.config();
 
@@ -36,57 +40,102 @@ const logger = winston.createLogger({
 });
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = config.port;
 
 // Initialize Descope Auth Service
 const authService = new DescopeAuthService({
-  projectId: process.env.DESCOPE_PROJECT_ID!,
-  managementKey: process.env.DESCOPE_MANAGEMENT_KEY
+  projectId: config.descope.projectId,
+  managementKey: config.descope.managementKey
 }, logger);
 
-// Configure CORS for development and production
+// Configure CORS - more restrictive in production
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:5174', 
-      'http://localhost:8080',
-      'http://localhost:8081',
-      'http://localhost:8082',
-      'http://localhost:8083',
-      process.env.FRONTEND_URL,
-      // Add Lovable domains
-      /https:\/\/.*\.lovable\.app$/,
-      /https:\/\/.*\.lovableproject\.com$/,
-      // Allow all localhost ports for development (8080-8090)
-      /http:\/\/localhost:80[8-9][0-9]/,
-    ];
-    
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    // Check if origin matches allowed patterns
-    const isAllowed = allowedOrigins.some(allowed => {
-      if (allowed instanceof RegExp) {
-        return allowed.test(origin);
+    // In production, use strict whitelist
+    if (config.isProduction) {
+      const allowedOrigins = [
+        config.frontendUrl,
+        ...config.allowedOrigins
+      ].filter(Boolean);
+      
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        logger.warn(`CORS blocked origin in production: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
       }
-      return allowed === origin;
-    });
-    
-    if (isAllowed) {
-      callback(null, true);
     } else {
-      console.warn('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+      // In development, allow common development origins
+      const allowedOrigins = [
+        'http://localhost:5173',
+        'http://localhost:5174', 
+        'http://localhost:8080',
+        'http://localhost:8081',
+        'http://localhost:8082',
+        'http://localhost:8083',
+        config.frontendUrl,
+        // Add Lovable domains for hackathon
+        /https:\/\/.*\.lovable\.app$/,
+        /https:\/\/.*\.lovableproject\.com$/,
+        // Allow localhost ports for development (8080-8090)
+        /http:\/\/localhost:80[8-9][0-9]/,
+      ].filter(Boolean);
+      
+      // Allow requests with no origin (mobile apps, Postman, etc.) in development
+      if (!origin) return callback(null, true);
+      
+      // Check if origin matches allowed patterns
+      const isAllowed = allowedOrigins.some(allowed => {
+        if (allowed instanceof RegExp) {
+          return allowed.test(origin);
+        }
+        return allowed === origin;
+      });
+      
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        logger.warn(`CORS blocked origin in development: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
     }
   },
   credentials: true,
+  maxAge: 86400, // 24 hours
 };
 
-// Middleware
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: config.isProduction ? undefined : false,
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.maxRequests,
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to all routes except health check
+app.use((req, res, next) => {
+  if (req.path === '/health') {
+    return next();
+  }
+  limiter(req, res, next);
+});
+
+// CORS middleware
 app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Body parsing middleware with size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Input sanitization middleware - apply to all requests
+app.use(sanitizeAllInputs);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -131,8 +131,13 @@ router.post('/:id/acknowledge', async (req: AuthenticatedRequest, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     
-    // In demo mode or without auth, just acknowledge
-    if (!token || process.env.NODE_ENV === 'development') {
+    // In demo mode without auth, require at least a demo token
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    // Allow demo tokens in demo mode only
+    if (token.startsWith('demo_token_')) {
       logger.info(`Alert ${id} acknowledged in demo mode`);
       res.json({ 
         success: true,
@@ -169,8 +174,13 @@ router.post('/:id/dismiss', async (req: AuthenticatedRequest, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     
-    // In demo mode or without auth, just dismiss
-    if (!token || process.env.NODE_ENV === 'development') {
+    // In demo mode without auth, require at least a demo token
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    // Allow demo tokens in demo mode only
+    if (token.startsWith('demo_token_')) {
       logger.info(`Alert ${id} dismissed in demo mode`);
       res.json({ 
         success: true,

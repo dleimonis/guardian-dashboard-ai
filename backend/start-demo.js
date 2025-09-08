@@ -25,20 +25,62 @@ const mockAgentStatuses = {
   StatusReporter: { status: 'online', lastActivity: new Date().toISOString(), metrics: {} },
 };
 
-// Simple CORS headers
-function setCorsHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+// Simple CORS headers - restricted to development origins
+function setCorsHeaders(req, res) {
+  const origin = req.headers.origin || req.headers.referer;
+  const allowedOrigins = [
+    'http://localhost:8080',
+    'http://localhost:8081',
+    'http://localhost:8082',
+    'http://localhost:8083',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:8081'
+  ];
+  
+  let allowedOrigin = 'http://localhost:8080'; // Default
+  if (origin) {
+    const cleanOrigin = origin.replace(/\/$/, '');
+    if (allowedOrigins.some(allowed => cleanOrigin.startsWith(allowed))) {
+      allowedOrigin = cleanOrigin;
+    }
+  }
+  
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 }
 
 // Send JSON response
-function sendJson(res, statusCode, data) {
+function sendJson(req, res, statusCode, data) {
+  const origin = req.headers.origin || req.headers.referer;
+  const allowedOrigins = [
+    'http://localhost:8080',
+    'http://localhost:8081',
+    'http://localhost:8082',
+    'http://localhost:8083',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:8081'
+  ];
+  
+  let allowedOrigin = 'http://localhost:8080'; // Default
+  if (origin) {
+    const cleanOrigin = origin.replace(/\/$/, '');
+    if (allowedOrigins.some(allowed => cleanOrigin.startsWith(allowed))) {
+      allowedOrigin = cleanOrigin;
+    }
+  }
+  
   res.writeHead(statusCode, {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
   });
   res.end(JSON.stringify(data));
 }
@@ -66,7 +108,7 @@ const server = http.createServer(async (req, res) => {
 
   // Handle CORS preflight
   if (method === 'OPTIONS') {
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
     res.writeHead(204);
     res.end();
     return;
@@ -74,7 +116,7 @@ const server = http.createServer(async (req, res) => {
 
   // API Routes
   if (pathname === '/health' && method === 'GET') {
-    sendJson(res, 200, {
+    sendJson(req, res, 200, {
       status: 'online',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
@@ -90,7 +132,7 @@ const server = http.createServer(async (req, res) => {
     if (status) {
       sendJson(res, 200, status);
     } else {
-      sendJson(res, 404, { error: 'Agent not found' });
+      sendJson(req, res, 404, { error: 'Agent not found' });
     }
   }
   else if (pathname === '/api/disasters' && method === 'GET') {
@@ -118,7 +160,7 @@ const server = http.createServer(async (req, res) => {
     ]);
   }
   else if (pathname === '/api/alerts/statistics' && method === 'GET') {
-    sendJson(res, 200, {
+    sendJson(req, res, 200, {
       total: 10,
       active: 1,
       critical: 0,
@@ -162,17 +204,17 @@ const server = http.createServer(async (req, res) => {
       const scenario = await parseJsonBody(req);
       console.log('Simulation requested:', scenario);
       
-      sendJson(res, 200, {
+      sendJson(req, res, 200, {
         simulationId: `sim_${Date.now()}`,
         status: 'running',
         message: 'Simulation started successfully',
       });
     } catch (error) {
-      sendJson(res, 400, { error: 'Invalid request body' });
+      sendJson(req, res, 400, { error: 'Invalid request body' });
     }
   }
   else {
-    sendJson(res, 404, { error: 'Not found' });
+    sendJson(req, res, 404, { error: 'Not found' });
   }
 });
 

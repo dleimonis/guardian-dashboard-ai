@@ -49,8 +49,8 @@ export class DescopeAuthService {
           userId: 'dev_user',
           email: 'dev@guardian.ai',
           name: 'Development User',
-          roles: ['admin'],
-          permissions: ['all'],
+          roles: ['user'], // Changed from 'admin' to 'user' for security
+          permissions: ['read'],
         };
         return next();
       }

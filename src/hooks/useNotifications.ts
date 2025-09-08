@@ -26,14 +26,22 @@ export const useNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [criticalOnly, setCriticalOnly] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
 
-  // Check if notifications are supported
+  // Check if notifications are supported and add initialization delay
   useEffect(() => {
     setIsSupported('Notification' in window);
     if ('Notification' in window) {
       setPermission(Notification.permission);
     }
+    
+    // Add a 3 second delay before allowing notifications to prevent immediate sounds on page load
+    const initTimer = setTimeout(() => {
+      setIsInitialized(true);
+    }, 3000);
+    
+    return () => clearTimeout(initTimer);
   }, []);
 
   // Request permission
@@ -87,7 +95,7 @@ export const useNotifications = () => {
 
   // Play notification sound with proper cleanup
   const playSound = useCallback((severity: string, repetition: number = 0) => {
-    if (!soundEnabled) return;
+    if (!soundEnabled || !isInitialized) return;
     
     // Prevent infinite loops - max 3 beeps for critical
     if (repetition >= maxBeeps) {
@@ -149,7 +157,7 @@ export const useNotifications = () => {
     } catch (error) {
       console.error('Error playing notification sound:', error);
     }
-  }, [soundEnabled]);
+  }, [soundEnabled, isInitialized]);
 
   // Emergency stop all sounds
   const stopAllSounds = useCallback(() => {
@@ -217,6 +225,9 @@ export const useNotifications = () => {
 
   // Send disaster notification
   const sendDisasterNotification = useCallback((disaster: DisasterNotification) => {
+    // Skip notifications during initialization period
+    if (!isInitialized) return;
+    
     // Check if we should send this notification
     if (criticalOnly && disaster.severity !== 'critical') {
       return;
@@ -265,7 +276,7 @@ export const useNotifications = () => {
       description: `${disaster.location}: ${disaster.message}`,
       variant: disaster.severity === 'critical' ? 'destructive' : 'default',
     });
-  }, [criticalOnly, playSound, showNotification, toast]);
+  }, [criticalOnly, playSound, showNotification, toast, isInitialized]);
 
   // Check and request permission on mount if not granted
   useEffect(() => {

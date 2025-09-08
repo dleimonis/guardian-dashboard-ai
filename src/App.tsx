@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { EmergencyProvider } from "@/contexts/EmergencyContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { UserProvider } from "@/contexts/UserContext";
@@ -23,6 +23,7 @@ const App = () => {
   const [apiTokens, setApiTokens] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [showLanding, setShowLanding] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Register service worker for notifications
   useEffect(() => {
@@ -48,14 +49,20 @@ const App = () => {
             if (response.success) {
               setAuthToken(storedToken);
               setIsAuthenticated(true);
+              setShowLanding(false);
             } else {
               localStorage.removeItem('auth_token');
             }
           })
           .catch(() => {
             localStorage.removeItem('auth_token');
+          })
+          .finally(() => {
+            setIsLoading(false);
           });
       });
+    } else {
+      setIsLoading(false);
     }
   }, []);
 
@@ -64,62 +71,96 @@ const App = () => {
     setApiTokens(data.services);
     setUser(data.user);
     setIsAuthenticated(true);
+    setShowLanding(false);
     localStorage.setItem('auth_token', data.token);
   };
 
-  // Show landing page first
-  if (showLanding && !isAuthenticated) {
+  // Show loading state while checking auth
+  if (isLoading) {
     return (
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <LandingPage onGetStarted={() => setShowLanding(false)} />
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-4 text-muted-foreground">Loading...</p>
+              </div>
+            </div>
           </TooltipProvider>
         </ThemeProvider>
       </QueryClientProvider>
     );
   }
 
-  // If not authenticated and past landing, show Descope login
-  if (!isAuthenticated) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <DescopeAuth onAuthenticated={handleAuthentication} />
-          </TooltipProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    );
-  }
-
-  // Authenticated - show main app
+  // Main app with router always available
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <UserProvider>
-          <EmergencyProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/profile" element={<UserProfile />} />
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Layout>
-              </BrowserRouter>
-            </TooltipProvider>
-          </EmergencyProvider>
-        </UserProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              {showLanding && !isAuthenticated && (
+                <Route path="/" element={<LandingPage onGetStarted={() => setShowLanding(false)} />} />
+              )}
+              
+              {/* Auth route */}
+              {!isAuthenticated && !showLanding && (
+                <Route path="*" element={<DescopeAuth onAuthenticated={handleAuthentication} />} />
+              )}
+              
+              {/* Protected routes */}
+              {isAuthenticated && (
+                <>
+                  <Route path="/" element={
+                    <UserProvider>
+                      <EmergencyProvider>
+                        <Layout>
+                          <Index />
+                        </Layout>
+                      </EmergencyProvider>
+                    </UserProvider>
+                  } />
+                  <Route path="/profile" element={
+                    <UserProvider>
+                      <EmergencyProvider>
+                        <Layout>
+                          <UserProfile />
+                        </Layout>
+                      </EmergencyProvider>
+                    </UserProvider>
+                  } />
+                  <Route path="/admin" element={
+                    <UserProvider>
+                      <EmergencyProvider>
+                        <Layout>
+                          <AdminDashboard />
+                        </Layout>
+                      </EmergencyProvider>
+                    </UserProvider>
+                  } />
+                  <Route path="*" element={
+                    <UserProvider>
+                      <EmergencyProvider>
+                        <Layout>
+                          <NotFound />
+                        </Layout>
+                      </EmergencyProvider>
+                    </UserProvider>
+                  } />
+                </>
+              )}
+              
+              {/* Fallback for any unmatched routes */}
+              {!isAuthenticated && !showLanding && (
+                <Route path="*" element={<Navigate to="/" replace />} />
+              )}
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

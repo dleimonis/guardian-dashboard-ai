@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Shield, CheckCircle, AlertCircle, Key, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { generateDemoToken } from '@/utils/crypto';
 
 interface DescopeAuthProps {
   onAuthenticated: (data: { token: string; services: Record<string, string>; user: any }) => void;
@@ -31,7 +32,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
       description: 'Fire detection from satellites',
       keyName: 'nasa_map_key',
       placeholder: 'Enter your NASA FIRMS MAP_KEY',
-      keyValue: import.meta.env.VITE_DEMO_NASA_KEY || ''
+      keyValue: '' // User must provide their own key
     },
     { 
       name: 'USGS Earthquake', 
@@ -277,7 +278,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
       
       // Proceed to app with whatever data we have
       onAuthenticated({
-        token: descopeToken || 'demo_token_' + Date.now(),
+        token: descopeToken || generateDemoToken(),
         services: localKeys,
         user: userData
       });
@@ -286,7 +287,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
       console.error('Error proceeding to app:', error);
       // Even on complete failure, proceed in demo mode
       onAuthenticated({
-        token: 'demo_token_' + Date.now(),
+        token: generateDemoToken(),
         services: {},
         user: { 
           email: 'demo@guardian.ai', 
@@ -435,7 +436,7 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
                   });
                   // Skip directly to app with demo credentials
                   onAuthenticated({
-                    token: descopeToken || 'demo_token_' + Date.now(),
+                    token: descopeToken || generateDemoToken(),
                     services: {},
                     user: { 
                       email: 'demo@guardian.ai', 
