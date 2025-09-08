@@ -36,7 +36,8 @@ const NotificationCenter: React.FC = () => {
     criticalOnly,
     setCriticalOnly,
     requestPermission,
-    sendDisasterNotification 
+    sendDisasterNotification,
+    stopAllSounds 
   } = useNotifications();
   
   const { disasters, alerts } = useEmergency();
@@ -201,10 +202,22 @@ const NotificationCenter: React.FC = () => {
                         Play sound when disasters are detected
                       </p>
                     </div>
-                    <Switch
-                      checked={soundEnabled}
-                      onCheckedChange={setSoundEnabled}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={soundEnabled}
+                        onCheckedChange={setSoundEnabled}
+                      />
+                      {soundEnabled && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={stopAllSounds}
+                          title="Emergency mute all sounds"
+                        >
+                          <VolumeX className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between">

@@ -44,6 +44,7 @@ export class AgentOrchestrator extends EventEmitter {
   private wsManager: WebSocketManager;
   private isRunning: boolean = false;
   private messageQueue: AgentMessage[] = [];
+  private messageProcessingInterval: NodeJS.Timeout | null = null;
 
   constructor(logger: Logger, wsManager: WebSocketManager) {
     super();
@@ -118,26 +119,44 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   private startMessageProcessing() {
-    setInterval(() => {
-      this.processMessageQueue();
+    this.messageProcessingInterval = setInterval(() => {
+      try {
+        this.processMessageQueue();
+      } catch (error) {
+        this.logger.error('Error processing message queue:', error);
+      }
     }, 100);
   }
 
   private processMessageQueue() {
     while (this.messageQueue.length > 0) {
       const message = this.messageQueue.shift();
-      if (message) {
-        this.deliverMessage(message);
+      if (message && typeof message === 'object') {
+        try {
+          this.deliverMessage(message);
+        } catch (error) {
+          this.logger.error('Error delivering message:', { error, message });
+        }
       }
     }
   }
 
   private deliverMessage(message: AgentMessage) {
+    // Validate message structure
+    if (!message || !message.to) {
+      this.logger.warn('Invalid message structure:', message);
+      return;
+    }
+
     const targetAgent = this.agents.get(message.to);
     
     if (targetAgent) {
-      targetAgent.receiveMessage(message);
-      this.logger.debug(`Message delivered from ${message.from} to ${message.to}`);
+      try {
+        targetAgent.receiveMessage(message);
+        this.logger.debug(`Message delivered from ${message.from} to ${message.to}`);
+      } catch (error) {
+        this.logger.error(`Error delivering message to ${message.to}:`, error);
+      }
     } else {
       this.logger.warn(`Target agent not found: ${message.to}`);
     }
@@ -264,32 +283,61 @@ export class AgentOrchestrator extends EventEmitter {
   public async runSimulation(scenario: any) {
     this.logger.info('Running disaster simulation:', scenario);
     
-    // Create simulated disaster event
+    // Validate scenario input
+    if (!scenario || !scenario.type || !scenario.severity || !scenario.location) {
+      this.logger.error('Invalid simulation scenario:', scenario);
+      return {
+        status: 'error',
+        message: 'Invalid simulation scenario',
+      };
+    }
+    
+    // Create simulated disaster event with validation
     const simulatedEvent: DisasterEvent = {
-      id: `sim_${Date.now()}`,
-      type: scenario.type,
-      severity: scenario.severity,
-      location: scenario.location,
+      id: `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: scenario.type || 'other',
+      severity: scenario.severity || 'medium',
+      location: {
+        lat: scenario.location?.lat || 0,
+        lon: scenario.location?.lon || 0,
+        name: scenario.location?.name || 'Unknown Location',
+        radius: scenario.location?.radius || 50,
+      },
       data: {
-        ...scenario.data,
+        ...(scenario.data || {}),
         isSimulation: true,
       },
       timestamp: new Date().toISOString(),
     };
 
-    // Trigger disaster detection flow
-    this.handleDisasterDetection(simulatedEvent);
+    try {
+      // Trigger disaster detection flow
+      this.handleDisasterDetection(simulatedEvent);
 
-    return {
-      simulationId: simulatedEvent.id,
-      status: 'running',
-      message: 'Simulation started successfully',
-    };
+      return {
+        simulationId: simulatedEvent.id,
+        status: 'running',
+        message: 'Simulation started successfully',
+      };
+    } catch (error) {
+      this.logger.error('Error running simulation:', error);
+      return {
+        status: 'error',
+        message: 'Failed to run simulation',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
   }
 
   public shutdown() {
     this.logger.info('Shutting down Agent Orchestrator...');
     this.isRunning = false;
+
+    // Clear the message processing interval
+    if (this.messageProcessingInterval) {
+      clearInterval(this.messageProcessingInterval);
+      this.messageProcessingInterval = null;
+    }
 
     // Stop all agents
     this.agents.forEach((agent, name) => {

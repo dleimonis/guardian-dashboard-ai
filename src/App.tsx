@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import UserProfile from "./components/UserProfile";
 import AdminDashboard from "./components/AdminDashboard";
 import Layout from "./components/Layout";
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [apiTokens, setApiTokens] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
+  const [showLanding, setShowLanding] = useState(true);
 
   // Register service worker for notifications
   useEffect(() => {
@@ -65,7 +67,22 @@ const App = () => {
     localStorage.setItem('auth_token', data.token);
   };
 
-  // If not authenticated, show Descope login
+  // Show landing page first
+  if (showLanding && !isAuthenticated) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <LandingPage onGetStarted={() => setShowLanding(false)} />
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  // If not authenticated and past landing, show Descope login
   if (!isAuthenticated) {
     return (
       <QueryClientProvider client={queryClient}>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Flame, CloudRain, Activity, Users } from 'lucide-react';
 
@@ -79,54 +79,91 @@ export const useNotifications = () => {
     }
   }, [isSupported, toast]);
 
-  // Play notification sound
-  const playSound = useCallback((severity: string) => {
+  // Track active sounds for cleanup
+  const [activeSounds, setActiveSounds] = useState<Set<number>>(new Set());
+  const soundTimeoutsRef = useRef<number[]>([]);
+  const maxBeeps = 3;
+  const beepCount = useRef(0);
+
+  // Play notification sound with proper cleanup
+  const playSound = useCallback((severity: string, repetition: number = 0) => {
     if (!soundEnabled) return;
     
-    // Create audio context for different severity levels
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Different sounds for different severities
-    switch (severity) {
-      case 'critical':
-        // Urgent alarm sound
-        oscillator.frequency.value = 800;
-        gainNode.gain.value = 0.3;
-        oscillator.type = 'square';
-        break;
-      case 'high':
-        // Warning beep
-        oscillator.frequency.value = 600;
-        gainNode.gain.value = 0.2;
-        oscillator.type = 'sine';
-        break;
-      case 'medium':
-        // Soft alert
-        oscillator.frequency.value = 400;
-        gainNode.gain.value = 0.15;
-        oscillator.type = 'sine';
-        break;
-      default:
-        // Info chime
-        oscillator.frequency.value = 300;
-        gainNode.gain.value = 0.1;
-        oscillator.type = 'sine';
+    // Prevent infinite loops - max 3 beeps for critical
+    if (repetition >= maxBeeps) {
+      beepCount.current = 0;
+      return;
     }
     
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.2);
-    
-    // Play multiple beeps for critical
-    if (severity === 'critical') {
-      setTimeout(() => playSound('critical'), 300);
-      setTimeout(() => playSound('critical'), 600);
+    try {
+      // Create audio context for different severity levels
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Different sounds for different severities
+      switch (severity) {
+        case 'critical':
+          // Urgent alarm sound
+          oscillator.frequency.value = 800;
+          gainNode.gain.value = 0.3;
+          oscillator.type = 'square';
+          break;
+        case 'high':
+          // Warning beep
+          oscillator.frequency.value = 600;
+          gainNode.gain.value = 0.2;
+          oscillator.type = 'sine';
+          break;
+        case 'medium':
+          // Soft alert
+          oscillator.frequency.value = 400;
+          gainNode.gain.value = 0.15;
+          oscillator.type = 'sine';
+          break;
+        default:
+          // Info chime
+          oscillator.frequency.value = 300;
+          gainNode.gain.value = 0.1;
+          oscillator.type = 'sine';
+      }
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+      
+      // Cleanup after sound plays
+      oscillator.onended = () => {
+        audioContext.close();
+      };
+      
+      // Play multiple beeps for critical (with safety limit)
+      if (severity === 'critical' && repetition < maxBeeps - 1) {
+        const timeoutId = window.setTimeout(() => {
+          playSound('critical', repetition + 1);
+        }, 300);
+        soundTimeoutsRef.current.push(timeoutId);
+      }
+    } catch (error) {
+      console.error('Error playing notification sound:', error);
     }
   }, [soundEnabled]);
+
+  // Emergency stop all sounds
+  const stopAllSounds = useCallback(() => {
+    // Clear all pending timeouts
+    soundTimeoutsRef.current.forEach(id => clearTimeout(id));
+    soundTimeoutsRef.current = [];
+    beepCount.current = 0;
+    setSoundEnabled(false);
+    
+    toast({
+      title: 'Sounds muted',
+      description: 'All notification sounds have been disabled',
+    });
+  }, [toast]);
 
   // Show browser notification
   const showNotification = useCallback((options: NotificationOptions) => {
@@ -242,6 +279,15 @@ export const useNotifications = () => {
     }
   }, [isSupported, permission, requestPermission]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Clear all sound timeouts on unmount
+      soundTimeoutsRef.current.forEach(id => clearTimeout(id));
+      soundTimeoutsRef.current = [];
+    };
+  }, []);
+
   return {
     permission,
     isSupported,
@@ -253,5 +299,6 @@ export const useNotifications = () => {
     showNotification,
     sendDisasterNotification,
     playSound,
+    stopAllSounds,
   };
 };

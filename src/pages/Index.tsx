@@ -11,6 +11,7 @@ import LiveTicker from '@/components/LiveTicker';
 import InfoModal from '@/components/InfoModal';
 import CommunityReport from '@/components/CommunityReport';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import OnboardingTour from '@/components/OnboardingTour';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -97,6 +98,7 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-background">
+      <OnboardingTour autoStart={true} />
       <div className={`${isMobile ? 'flex-col' : 'flex'} h-[calc(100vh-128px)]`}>
         {/* Left Sidebar - Agent Status (Desktop only, mobile uses Sheet) */}
         {!isMobile && (
