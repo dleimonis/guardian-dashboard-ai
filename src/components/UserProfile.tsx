@@ -70,7 +70,7 @@ export default function UserProfile() {
     const updates = {
       ...preferences,
       [category]: {
-        ...preferences[category as keyof typeof preferences],
+        ...(preferences[category as keyof typeof preferences] as any),
         [key]: value,
       },
     };

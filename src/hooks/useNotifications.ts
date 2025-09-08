@@ -178,16 +178,15 @@ export const useNotifications = () => {
     if (permission !== 'granted') return null;
     
     try {
-      const notification = new Notification(options.title, {
-        body: options.body,
-        icon: options.icon || '/icon-192x192.png',
-        tag: options.tag,
-        requireInteraction: options.requireInteraction ?? true,
-        silent: options.silent ?? false,
-        data: options.data,
-        badge: '/badge-72x72.png',
-        vibrate: options.data?.severity === 'critical' ? [200, 100, 200] : [200],
-      });
+        const notification = new Notification(options.title, {
+          body: options.body,
+          icon: options.icon || '/icon-192x192.png',
+          tag: options.tag,
+          requireInteraction: options.requireInteraction ?? true,
+          silent: options.silent ?? false,
+          data: options.data,
+          badge: '/badge-72x72.png',
+        });
       
       // Handle click
       notification.onclick = (event) => {
