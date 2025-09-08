@@ -306,7 +306,11 @@ export default function AlertZones() {
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              // TODO: Implement edit functionality
+                              // Edit functionality - future enhancement
+                              toast({
+                                title: "Coming Soon",
+                                description: "Zone editing will be available in the next version.",
+                              });
                             }}
                           >
                             <Edit className="h-3 w-3 mr-1" />

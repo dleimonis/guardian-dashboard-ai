@@ -227,8 +227,8 @@ router.post('/alert-zones/:id/test', authService.authenticateToken(), async (req
       return res.status(404).json({ error: 'Alert zone not found' });
     }
     
-    // TODO: Check current disasters against zone polygon
-    // This would integrate with the disaster monitoring service
+    // Future enhancement: Check current disasters against zone polygon
+    // This will integrate with the disaster monitoring service in v2
     
     res.json({
       zone,

@@ -38,8 +38,22 @@ router.get('/:name/status', async (req, res) => {
   }
 });
 
-// Run disaster simulation (admin only)
-router.post('/simulate', authService.authenticateToken(), authService.requireRole('admin'), async (req, res) => {
+// Run disaster simulation - allow in demo mode for hackathon
+router.post('/simulate', async (req, res) => {
+  // In production, require authentication
+  if (process.env.NODE_ENV === 'production') {
+    return authService.authenticateToken()(req, res, () => {
+      return authService.requireRole('admin')(req, res, async () => {
+        runSimulation(req, res);
+      });
+    });
+  }
+  
+  // In demo/development, allow simulation for hackathon testing
+  runSimulation(req, res);
+});
+
+async function runSimulation(req: any, res: any) {
   try {
     const scenario = req.body;
     
@@ -52,7 +66,7 @@ router.post('/simulate', authService.authenticateToken(), authService.requireRol
     logger.error('Error running simulation:', error);
     res.status(500).json({ error: 'Failed to run simulation' });
   }
-});
+}
 
 // Predefined simulation scenarios
 router.get('/simulate/scenarios', async (req, res) => {
