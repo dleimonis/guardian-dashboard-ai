@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Shield, CheckCircle, AlertCircle, Key, Save } from 'lucide-react';
+import { Shield, CheckCircle, AlertCircle, Key, Save, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateDemoToken } from '@/utils/crypto';
 
@@ -425,31 +425,40 @@ const DescopeAuth: React.FC<DescopeAuthProps> = ({ onAuthenticated }) => {
               </Button>
             </div>
 
-            {/* Demo Mode Button for Hackathon */}
-            <div className="pt-2 border-t">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  toast({
-                    title: "Demo Mode",
-                    description: "Proceeding without API keys - perfect for testing!",
-                  });
-                  // Skip directly to app with demo credentials
-                  onAuthenticated({
-                    token: descopeToken || generateDemoToken(),
-                    services: {},
-                    user: { 
-                      email: 'demo@guardian.ai', 
-                      name: 'Demo User',
-                      sub: 'demo_user_' + Date.now()
-                    }
-                  });
-                }}
-                className="w-full text-muted-foreground hover:text-foreground"
-              >
-                <Shield className="w-4 h-4 mr-2" />
-                Skip to Demo Mode (For Hackathon Testing)
-              </Button>
+            {/* Demo Mode Button for Hackathon - MORE PROMINENT */}
+            <div className="pt-4 border-t mt-4">
+              <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-4 border-2 border-purple-500/30">
+                <h3 className="text-sm font-semibold text-purple-700 dark:text-purple-300 mb-2 flex items-center">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  MCP Hackathon Demo Mode
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Skip authentication and API setup - jump straight into the action!
+                </p>
+                <Button
+                  onClick={() => {
+                    toast({
+                      title: "Demo Mode Activated! 🚀",
+                      description: "Full functionality enabled - no API keys needed!",
+                    });
+                    // Skip directly to app with demo credentials
+                    onAuthenticated({
+                      token: descopeToken || generateDemoToken(),
+                      services: {},
+                      user: { 
+                        email: 'demo@guardian.ai', 
+                        name: 'Demo User',
+                        sub: 'demo_user_' + Date.now()
+                      }
+                    });
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                  size="lg"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Skip to Demo Mode (For Hackathon Testing)
+                </Button>
+              </div>
             </div>
           </div>
         )}
