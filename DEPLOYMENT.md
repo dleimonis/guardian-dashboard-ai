@@ -1,7 +1,7 @@
 # 🚀 Deployment Guide - Guardian Dashboard AI
 
 ## Current Status
-- **Frontend**: Deployed on Lovable (auto-deployed from GitHub)
+- **Frontend**: Ready for deployment (Vercel/Netlify recommended)
 - **Backend**: Ready for deployment (Railway/Render recommended)
 
 ## Backend Deployment Options
@@ -21,7 +21,7 @@ Railway offers the easiest deployment with WebSocket support and free credits.
    PORT=3001
    DESCOPE_PROJECT_ID=P31sYu11ghqKWlnCob2qq2n9fvcN
    DESCOPE_MANAGEMENT_KEY=(leave empty for demo)
-   FRONTEND_URL=https://your-lovable-url.app
+   FRONTEND_URL=https://your-frontend-url.app
    ```
 
 4. **Deploy**

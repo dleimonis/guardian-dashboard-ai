@@ -289,18 +289,7 @@ this.registerAgent(new NewAgent(this.logger, this));
 
 ## 🚀 Deployment
 
-### Deploy to Lovable
-
-1. Push to GitHub:
-```bash
-git add .
-git commit -m "Your changes"
-git push origin main
-```
-
-2. Lovable will auto-deploy from GitHub
-
-### Manual Deployment
+### Deploy to Production
 
 ```bash
 # Build for production
