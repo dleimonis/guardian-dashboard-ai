@@ -1,6 +1,6 @@
 {
-  "name": "Guardian Dashboard AI",
-  "short_name": "Guardian AI",
+  "name": "Guardian Dashboard",
+  "short_name": "Guardian",
   "description": "Real-time disaster monitoring and emergency alert system",
   "start_url": "/",
   "display": "standalone",

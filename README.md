@@ -1,19 +1,19 @@
-# 🚨 Guardian Dashboard AI - Emergency Management System
+# 🚨 Guardian Dashboard - Emergency Management System
 
 [![Built with React](https://img.shields.io/badge/React-18.3-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
-[![Powered by AI](https://img.shields.io/badge/Powered%20by-AI-orange.svg)](https://github.com/dleimonis/guardian-dashboard-ai)
+[![Powered by Technology](https://img.shields.io/badge/Powered%20by-Technology-orange.svg)](https://github.com/dleimonis/guardian-dashboard)
 [![MCP Hackathon](https://img.shields.io/badge/MCP-Hackathon-purple.svg)](https://github.com/dleimonis/guardian-dashboard-ai)
 
-> **Building an AI Emergency Hero System** - A multi-agent AI system that monitors disasters 24/7 and automatically warns people to save lives. Like having a superhero AI that never sleeps!
+> **Building an Emergency Hero System** - A multi-agent system that monitors disasters 24/7 and automatically warns people to save lives. Like having a superhero that never sleeps!
 
 ## 🌟 Overview
 
-Guardian Dashboard AI is an advanced emergency management system that uses multiple AI agents to detect, analyze, and respond to disasters in real-time. Built for the MCP Hackathon, it demonstrates how AI can be used to save lives by providing early warnings and coordinated emergency responses.
+Guardian Dashboard is an advanced emergency management system that uses multiple automated agents to detect, analyze, and respond to disasters in real-time. Built for the MCP Hackathon, it demonstrates how automation can be used to save lives by providing early warnings and coordinated emergency responses.
 
 ### 🎯 Key Features
 
-- **🤖 Multi-Agent AI System** - 12+ specialized AI agents working together
+- **🤖 Multi-Agent System** - 12+ specialized agents working together
 - **🌍 Real-Time World Map** - Interactive Leaflet map with live disaster tracking
 - **📡 WebSocket Updates** - Live data streaming for instant alerts
 - **🚨 Emergency Simulation** - Test scenarios including MEGA DISASTER mode
@@ -54,7 +54,7 @@ Guardian Dashboard AI is an advanced emergency management system that uses multi
 └──────────────────────────────────────────────┘
 ```
 
-### AI Agent Squads
+### Agent Squads
 
 #### 🔍 Detection Squad (Monitoring 24/7)
 - **FireWatcher** - NASA satellite fire detection
@@ -355,17 +355,17 @@ Built for the Model Context Protocol Hackathon, demonstrating how AI agents can 
 
 ### Team
 - Lead Developer: Dimitris Leimonis
-- System Architecture: Multi-Agent AI Design
+- System Architecture: Multi-Agent Design
 - Design: JARVIS-inspired crisis command center
 
 ## 🌟 Vision
 
-> "Imagine creating an AI system that watches for disasters 24/7 and automatically warns people to get to safety. It's like having a superhero AI that never sleeps, constantly checking for earthquakes, fires, floods, and storms, then sending alerts to save lives!"
+> "Imagine creating a system that watches for disasters 24/7 and automatically warns people to get to safety. It's like having a superhero that never sleeps, constantly checking for earthquakes, fires, floods, and storms, then sending alerts to save lives!"
 
-This project demonstrates the power of AI in emergency management, showing how multiple specialized agents can work together to detect threats, analyze impacts, and coordinate responses - all in real-time.
+This project demonstrates the power of automation in emergency management, showing how multiple specialized agents can work together to detect threats, analyze impacts, and coordinate responses - all in real-time.
 
 ---
 
-**🚨 Remember: With great AI power comes great responsibility to save lives! 🚨**
+**🚨 Remember: With great power comes great responsibility to save lives! 🚨**
 
 Built with ❤️ for the MCP Hackathon

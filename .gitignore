@@ -31,3 +31,33 @@ RAILWAY_GUIDE_FOR_KIDS.md
 HACKATHON_SUBMISSION_CHECKLIST.md
 deploy-to-railway.sh
 CLAUDE.md
+app_prd.md
+hackathon.pdf
+
+# Backend specific
+backend/node_modules
+backend/dist
+backend/.env
+backend/.env.*
+backend/logs
+backend/*.log
+
+# Testing
+coverage
+*.test.js
+*.spec.js
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache

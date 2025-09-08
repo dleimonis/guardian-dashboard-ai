@@ -1,7 +1,7 @@
 {
   "name": "guardian-dashboard-backend",
   "version": "1.0.0",
-  "description": "Backend server for Guardian Dashboard AI - Emergency Management System",
+  "description": "Backend server for Guardian Dashboard - Emergency Management System",
   "main": "dist/index.js",
   "scripts": {
     "dev": "npx ts-node src/index.ts",
