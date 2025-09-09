@@ -34,8 +34,8 @@ const StatisticsBar = ({ activeEmergencies, peopleWarned, responseTime, systemSt
       color: activeEmergencies > 0 ? 'critical' : 'success',
     },
     {
-      label: 'People Warned',
-      value: peopleWarned.toLocaleString(),
+      label: 'Alert Reach',
+      value: peopleWarned > 0 ? peopleWarned.toLocaleString() : 'Ready',
       icon: Users,
       color: 'secondary',
     },

@@ -76,7 +76,7 @@ FloodMonitor    PriorityManager  Orchestrator
    - Watch 12 agents spring into action!
 
 3. **Explore Live Features**
-   - **World Map:** See real earthquakes from USGS (45+ detected today!)
+   - **World Map:** Real-time earthquake monitoring from USGS data feed
    - **Agent Status:** Watch agents work in real-time
    - **Alert Feed:** Monitor incoming disaster alerts
    - **Statistics Bar:** Track system performance

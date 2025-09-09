@@ -169,7 +169,7 @@ const Index = () => {
           <ErrorBoundary fallback={<div className="p-4 text-warning">Statistics failed to load</div>}>
             <StatisticsBar
               activeEmergencies={activeEmergencies}
-              peopleWarned={1247893}
+              peopleWarned={0}
               responseTime={18}
               systemStatus={systemStatus === 'demo' ? 'online' : systemStatus as 'online' | 'degraded' | 'offline'}
             />

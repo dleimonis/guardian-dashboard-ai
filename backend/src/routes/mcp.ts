@@ -159,7 +159,7 @@ export function createMCPRoutes(logger: Logger) {
               totalDisasters: 47,
               activeDisasters: 3,
               alertsSent: 125000,
-              livesSaved: 8500,
+              potentialLivesSaved: 'thousands',
               agentsActive: 12,
               uptime: '99.9%'
             }
