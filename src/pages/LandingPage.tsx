@@ -42,9 +42,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     },
     {
       icon: <Users className="h-6 w-6" />,
-      title: "Lives Saved Tracking",
-      description: "Real-time counter showing lives saved through early warnings and evacuations",
-      highlight: "8,500+ Saved"
+      title: "Life-Saving Potential",
+      description: "Designed to save thousands of lives through early warnings and rapid response",
+      highlight: "< 30s Response"
     },
     {
       icon: <Wifi className="h-6 w-6" />,
@@ -55,9 +55,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   ];
 
   const stats = [
-    { label: "Lives Saved", value: "8,500+", icon: <Users className="h-4 w-4" /> },
+    { label: "Response Time", value: "< 30s", icon: <Clock className="h-4 w-4" /> },
     { label: "AI Agents", value: "12", icon: <Activity className="h-4 w-4" /> },
-    { label: "Success Rate", value: "99.2%", icon: <CheckCircle className="h-4 w-4" /> },
+    { label: "Coverage", value: "Global", icon: <Globe className="h-4 w-4" /> },
     { label: "MCP Ready", value: "✓", icon: <Wifi className="h-4 w-4" /> }
   ];
 
@@ -77,7 +77,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     {
       step: "3",
       title: "Action",
-      description: "Instant alerts dispatched, tracking lives saved in real-time",
+      description: "Instant alerts dispatched through multiple channels to save lives",
       icon: <Bell className="h-5 w-5" />
     }
   ];
@@ -99,7 +99,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </h1>
             
             <p className="text-xl md:text-2xl text-muted-foreground mb-8">
-              Multi-agent AI system that has already saved 8,500+ lives through real-time disaster detection
+              Multi-agent AI system with the potential to save thousands of lives through real-time disaster detection
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -281,7 +281,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             Ready to Stay Safe?
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join the system that has already saved 8,500+ lives through AI-powered disaster detection
+            Join thousands who trust Guardian Dashboard for real-time disaster alerts and life-saving potential
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

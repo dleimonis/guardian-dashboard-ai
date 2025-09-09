@@ -12,7 +12,7 @@ import InfoModal from '@/components/InfoModal';
 import CommunityReport from '@/components/CommunityReport';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import OnboardingTour from '@/components/OnboardingTour';
-import { LivesSavedCounter } from '@/components/LivesSavedCounter';
+import { SystemCapabilityCounter } from '@/components/SystemCapabilityCounter';
 import { AgentDecisionLog } from '@/components/AgentDecisionLog';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -122,8 +122,8 @@ const Index = () => {
           </div>
           {!isAgentsCollapsed && (
             <>
-              {/* Lives Saved Counter - Shows impact */}
-              <LivesSavedCounter />
+              {/* System Capability Counter - Shows potential */}
+              <SystemCapabilityCounter />
               
               {/* Agent Cards */}
               {agents.map((agent, index) => (
