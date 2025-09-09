@@ -155,6 +155,10 @@ app.use('/api/community', communityRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/users', userRoutes);
 
+// MCP Routes for external agent connectivity
+import { createMCPRoutes } from './routes/mcp';
+app.use('/api/mcp', createMCPRoutes(logger));
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', err);

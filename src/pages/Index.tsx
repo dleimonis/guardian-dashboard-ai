@@ -12,6 +12,8 @@ import InfoModal from '@/components/InfoModal';
 import CommunityReport from '@/components/CommunityReport';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import OnboardingTour from '@/components/OnboardingTour';
+import { LivesSavedCounter } from '@/components/LivesSavedCounter';
+import { AgentDecisionLog } from '@/components/AgentDecisionLog';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -118,16 +120,24 @@ const Index = () => {
               {isAgentsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
             </Button>
           </div>
-          {!isAgentsCollapsed && agents.map((agent, index) => (
-            <AgentStatusCard
-              key={agent.name}
-              name={agent.name}
-              description={agent.description}
-              status={agent.status}
-              type={agent.type}
-              lastUpdate={agent.lastUpdate}
-            />
-          ))}
+          {!isAgentsCollapsed && (
+            <>
+              {/* Lives Saved Counter - Shows impact */}
+              <LivesSavedCounter />
+              
+              {/* Agent Cards */}
+              {agents.map((agent, index) => (
+                <AgentStatusCard
+                  key={agent.name}
+                  name={agent.name}
+                  description={agent.description}
+                  status={agent.status}
+                  type={agent.type}
+                  lastUpdate={agent.lastUpdate}
+                />
+              ))}
+            </>
+          )}
           {isAgentsCollapsed && (
             <div className="space-y-2">
               {agents.map((agent) => (
@@ -169,9 +179,13 @@ const Index = () => {
           </ErrorBoundary>
         </div>
 
-        {/* Right Sidebar - Alert Feed (Desktop only, mobile uses Sheet) */}
+        {/* Right Sidebar - Alert Feed & Decision Log (Desktop only, mobile uses Sheet) */}
         {!isMobile && (
           <div className="w-96 p-6 space-y-4 overflow-y-auto">
+          {/* Agent Decision Log - Shows AI autonomy */}
+          <AgentDecisionLog />
+          
+          {/* Alert Feed */}
           <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-2 h-2 bg-critical rounded-full mr-3 animate-status-blink" />
