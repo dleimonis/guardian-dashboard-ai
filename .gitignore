@@ -33,6 +33,11 @@ deploy-to-railway.sh
 CLAUDE.md
 app_prd.md
 hackathon.pdf
+CRITICAL_UPDATES.md
+SUBMISSION.md
+*.claude
+.claude/
+claude-code.json
 
 # Backend specific
 backend/node_modules

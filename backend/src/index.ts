@@ -74,9 +74,9 @@ const corsOptions = {
         'http://localhost:8082',
         'http://localhost:8083',
         config.frontendUrl,
-        // Add Lovable domains for hackathon
-        /https:\/\/.*\.lovable\.app$/,
-        /https:\/\/.*\.lovableproject\.com$/,
+        // Add deployment domains
+        /https:\/\/.*\.vercel\.app$/,
+        /https:\/\/.*\.netlify\.app$/,
         // Allow localhost ports for development (8080-8090)
         /http:\/\/localhost:80[8-9][0-9]/,
       ].filter(Boolean);
