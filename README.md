@@ -73,6 +73,25 @@ Guardian Dashboard is an advanced emergency management system that uses multiple
 - **NotificationManager** - Multi-channel alerts (SMS/Email/Push)
 - **StatusReporter** - System status updates
 
+## 🚀 Quick Start for Judges
+
+### 🎯 Test the MEGA DISASTER Mode
+```bash
+# Clone and install
+git clone https://github.com/dleimonis/guardian-dashboard-ai.git
+cd guardian-dashboard-ai
+npm install
+
+# Start the application
+npm run dev
+
+# Open http://localhost:8080
+# Click red EMERGENCY button → Select MEGA DISASTER → Watch the magic!
+```
+
+### 📖 Demo Script Available
+See [DEMO_SCRIPT.md](https://github.com/dleimonis/guardian-dashboard-ai/blob/main/DEMO_SCRIPT.md) for a complete walkthrough.
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -199,6 +218,46 @@ Connect to `ws://localhost:3001/ws` for real-time updates:
 {
   type: 'ping'
 }
+```
+
+## 🤖 MCP (Model Context Protocol) Integration
+
+Guardian Dashboard includes a full MCP server implementation for external agent connectivity:
+
+### MCP Server Features
+- **Tools**: Disaster detection, threat analysis, alert dispatch, simulation
+- **Resources**: Active disasters, recent alerts, agent status, system statistics
+- **Prompts**: Emergency response planning, evacuation coordination
+- **Security**: Role-based permissions, rate limiting, token authentication
+
+### MCP Tools Available
+```javascript
+// Detect disasters in a specific area
+detect_disaster({ location: { lat, lon }, radius, disasterTypes })
+
+// Analyze threat levels
+analyze_threat({ disasterId, includeEvacuation, priorityThreshold })
+
+// Dispatch emergency alerts
+dispatch_alert({ alertType, channels, message, affectedZones })
+
+// Run disaster simulation
+simulate_disaster({ scenario, intensity })
+
+// Get agent status
+get_agent_status({ squad })
+```
+
+### Connecting to MCP Server
+```bash
+# Start MCP server (port 3002)
+cd backend && node dist/mcp-server.js
+
+# Test with curl
+curl -X POST http://localhost:3002/mcp/detect_disaster \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"location": {"lat": 37.7749, "lon": -122.4194}, "radius": 100}'
 ```
 
 ## 🛠️ Technology Stack

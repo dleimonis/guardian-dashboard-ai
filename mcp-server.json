@@ -1,0 +1,230 @@
+{
+  "name": "guardian-dashboard-mcp",
+  "version": "1.0.0",
+  "description": "Guardian Dashboard AI MCP Server for Multi-Agent Emergency Management",
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": true,
+    "sampling": false
+  },
+  "server": {
+    "command": "node",
+    "args": ["backend/dist/mcp-server.js"],
+    "env": {
+      "NODE_ENV": "production",
+      "MCP_MODE": "enabled"
+    }
+  },
+  "tools": [
+    {
+      "name": "detect_disaster",
+      "description": "Trigger disaster detection across all Detection Squad agents",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "object",
+            "properties": {
+              "lat": { "type": "number" },
+              "lon": { "type": "number" }
+            },
+            "required": ["lat", "lon"]
+          },
+          "radius": {
+            "type": "number",
+            "description": "Search radius in kilometers"
+          },
+          "disasterTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["fire", "earthquake", "flood", "weather", "all"]
+            }
+          }
+        },
+        "required": ["location"]
+      }
+    },
+    {
+      "name": "analyze_threat",
+      "description": "Analyze threat level and impact using Analysis Squad",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "disasterId": { "type": "string" },
+          "includeEvacuation": { "type": "boolean" },
+          "priorityThreshold": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"]
+          }
+        },
+        "required": ["disasterId"]
+      }
+    },
+    {
+      "name": "dispatch_alert",
+      "description": "Dispatch emergency alerts through Action Squad",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "alertType": {
+            "type": "string",
+            "enum": ["evacuation", "warning", "watch", "emergency"]
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["sms", "email", "push", "broadcast", "all"]
+            }
+          },
+          "message": { "type": "string" },
+          "affectedZones": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["alertType", "message"]
+      }
+    },
+    {
+      "name": "simulate_disaster",
+      "description": "Run disaster simulation for testing",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "scenario": {
+            "type": "string",
+            "enum": ["fire", "earthquake", "flood", "mega_disaster"]
+          },
+          "intensity": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "extreme"]
+          }
+        },
+        "required": ["scenario"]
+      }
+    },
+    {
+      "name": "get_agent_status",
+      "description": "Get status of all AI agents",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "squad": {
+            "type": "string",
+            "enum": ["detection", "analysis", "action", "all"]
+          }
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "uri": "disaster://active",
+      "name": "Active Disasters",
+      "description": "List of currently active disasters being monitored",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "alert://recent",
+      "name": "Recent Alerts",
+      "description": "Recent emergency alerts dispatched by the system",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "agent://status",
+      "name": "Agent Status",
+      "description": "Current status and health of all AI agents",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "statistics://dashboard",
+      "name": "System Statistics",
+      "description": "Real-time system performance and disaster statistics",
+      "mimeType": "application/json"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "emergency_response",
+      "description": "Generate emergency response plan for a disaster",
+      "arguments": [
+        {
+          "name": "disasterType",
+          "description": "Type of disaster",
+          "required": true
+        },
+        {
+          "name": "severity",
+          "description": "Severity level (1-10)",
+          "required": true
+        },
+        {
+          "name": "location",
+          "description": "Affected location",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "evacuation_plan",
+      "description": "Create evacuation plan for affected areas",
+      "arguments": [
+        {
+          "name": "zones",
+          "description": "Affected zones requiring evacuation",
+          "required": true
+        },
+        {
+          "name": "population",
+          "description": "Estimated population to evacuate",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "security": {
+    "authentication": {
+      "type": "bearer",
+      "tokenEndpoint": "/api/auth/mcp/token"
+    },
+    "permissions": {
+      "detection_squad": [
+        "detect_disaster",
+        "get_agent_status"
+      ],
+      "analysis_squad": [
+        "analyze_threat",
+        "get_agent_status"
+      ],
+      "action_squad": [
+        "dispatch_alert",
+        "get_agent_status"
+      ],
+      "admin": ["*"],
+      "viewer": [
+        "get_agent_status"
+      ]
+    },
+    "rateLimits": {
+      "detect_disaster": {
+        "requests": 100,
+        "windowMs": 60000
+      },
+      "analyze_threat": {
+        "requests": 200,
+        "windowMs": 60000
+      },
+      "dispatch_alert": {
+        "requests": 50,
+        "windowMs": 60000
+      },
+      "simulate_disaster": {
+        "requests": 10,
+        "windowMs": 60000
+      }
+    }
+  }
+}
